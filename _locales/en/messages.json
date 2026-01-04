@@ -1,0 +1,263 @@
+{
+  "extensionDesc": {
+    "message": "For Youtube & YouTube Music, this extension reflects the youtube interface in a canvas (most especifically the video player). Mirror or cast any YouTube video behind it in real time with extensive settings."
+  },
+  "extension_action": {
+    "message": "Mirror video"
+  },
+  "extension_err_connection": {
+    "message": "The page lost connection with the extension, please refresh the page or activate the extension."
+  },
+  "extension_on": {
+    "message": "ReflecTube has been activated"
+  },
+  "extension_off": {
+    "message": "ReflecTube has been disabled"
+  },
+  "menu_action": {
+    "message": "Open  configuration"
+  },
+  "settings_interval": {
+    "message": "Interval"
+  },
+  "settings_quality": {
+    "message": "Quality"
+  },
+  "settings_blur": {
+    "message": "Blur"
+  },
+  "settings_opacity": {
+    "message": "Opacity"
+  },
+  "settings_visualizer": {
+    "message": "Visualizer"
+  },
+  "settings_style": {
+    "message": "Style"
+  },
+  "settings_image": {
+    "message": "Change image"
+  },
+  "settings_text": {
+    "message": "Highlight text"
+  },
+  "settings_filters": {
+    "message": "Filters"
+  },
+  "settings_pointer": {
+    "message": "Follow pointer"
+  },
+  "settings_reset": {
+    "message": "Restore"
+  },
+  "option_max": {
+    "message": "Yes - Maximum"
+  },
+  "option_average": {
+    "message": "Yes - Average"
+  },
+  "option_yes": {
+    "message": "Yes"
+  },
+  "option_no": {
+    "message": "No"
+  },
+  "option_video": {
+    "message": "Video"
+  },
+  "option_thumbnail": {
+    "message": "Miniature"
+  },
+  "option_image": {
+    "message": "Custom image"
+  },
+  "option_file": {
+    "message": "Archive"
+  },
+  "option_link": {
+    "message": "Link"
+  },
+  "option_grayscale": {
+    "message": "Grayscale"
+  },
+  "option_rgb": {
+    "message": "rgb"
+  },
+  "option_invert": {
+    "message": "Inverted colors"
+  },
+  "option_saturate": {
+    "message": "saturated colors"
+  },
+  "option_sepia": {
+    "message": "Sepia"
+  },
+  "option_pointer_inverted": {
+    "message": "Yes - Inverted"
+  },
+  "option_reset": {
+    "message": "Do you want to reset ReflecTube settings to default?"
+  },
+  "option_resetting": {
+    "message": "Settings have been reset to default"
+  },
+  "extension_opening_menu": {
+    "message": "The menu has been opened"
+  },
+  "extension_opened_menu": {
+    "message": "The menu is already open"
+  },
+  "extension_err_menu": {
+    "message": "Can't open menu outside of Youtube"
+  },
+  "devInfo": {
+    "message": "by Manzanitabot123 & Community"
+  },
+  "devMessage": {
+    "message": "Thank you so much {user} for using ReflectTube! "
+  },
+  "user": {
+    "message": "user"
+  },
+  "coming_soon": {
+    "message": "Coming soon"
+  },
+  "loadError": {
+    "message": "An error occurred while loading the Reflectube plugin."
+  },
+  "settings_filters_title": {
+    "message": "FILTERS"
+  },
+  "settings_system_title": {
+    "message": "SYSTEM"
+  },
+  "settings_extension_switch": {
+    "message": "Extension"
+  },
+  "settings_saturation": {
+    "message": "Saturation"
+  },
+  "settings_brightness": {
+    "message": "Brightness"
+  },
+  "settings_contrast": {
+    "message": "Contrast"
+  },
+  "settings_sepia": {
+    "message": "Sepia"
+  },
+  "settings_audio_reactivity": {
+    "message": "Audio Reactivity"
+  },
+  "settings_audio_sensitivity": {
+    "message": "Audio Sensitivity"
+  },
+  "settings_framerate": {
+    "message": "Frame Rate (ms)"
+  },
+  "settings_smoothness": {
+    "message": "Smoothness"
+  },
+  "settings_resolution": {
+    "message": "Resolution (Px)"
+  },
+  "settings_camera_shake": {
+    "message": "Camera Shake (Handheld)"
+  },
+  "settings_camera_intensity": {
+    "message": "Camera Intensity"
+  },
+  "settings_legacy_mode": {
+    "message": "Legacy Mode (2 Canvas)"
+  },
+  "settings_pointer_follow": {
+    "message": "Pointer Follow (Inverted)"
+  },
+  "settings_visualizer_color": {
+    "message": "Audio Visualizer (Dynamic color)"
+  },
+  "settings_ambient_mode": {
+    "message": "Ambient Mode (PearDesktop)"
+  },
+  "settings_ambient_size": {
+    "message": "Ambient Scale (%)"
+  },
+  "tooltip_ambient_mode": {
+    "message": "Injects the reflection inside the player. Optimized for Shorts/Miniplayer. Replaces default mode."
+  },
+  "tooltip_ambient_size": {
+    "message": "Adjust the size of the ambient glow relative to the video."
+  },
+  "settings_reset_config": {
+    "message": "Reset Configuration"
+  },
+  "ui_weak": {
+    "message": "Weak"
+  },
+  "ui_medium": {
+    "message": "Medium"
+  },
+  "ui_strong": {
+    "message": "Strong"
+  },
+  "ui_by": {
+    "message": "By Manzbot"
+  },
+  "update_available_msg": {
+    "message": "New version {version} available!"
+  },
+  "update_btn_text": {
+    "message": "Download update"
+  },
+  "tooltip_master": {
+    "message": "Enable or disable the extension globally."
+  },
+  "tooltip_opacity": {
+    "message": "Adjust the transparency of the reflection."
+  },
+  "tooltip_blur": {
+    "message": "Apply a blur effect to the reflection."
+  },
+  "tooltip_saturation": {
+    "message": "Adjust the color intensity."
+  },
+  "tooltip_brightness": {
+    "message": "Adjust the brightness level."
+  },
+  "tooltip_contrast": {
+    "message": "Adjust the contrast between light and dark areas."
+  },
+  "tooltip_sepia": {
+    "message": "Apply a vintage sepia tone filter."
+  },
+  "tooltip_audio": {
+    "message": "Enable visual effects that react to audio output."
+  },
+  "tooltip_sensitivity": {
+    "message": "Adjust how sensitive the visuals are to audio volume."
+  },
+  "tooltip_framerate": {
+    "message": "Set the refresh rate of the reflection (lower ms = smoother)."
+  },
+  "tooltip_smoothness": {
+    "message": "Adjust the smoothness of the movement interpolation."
+  },
+  "tooltip_resolution": {
+    "message": "Set the rendering resolution of the canvas."
+  },
+  "tooltip_camerashake": {
+    "message": "Simulate a handheld camera movement effect."
+  },
+  "tooltip_cameraintensity": {
+    "message": "Adjust the intensity of the camera shake."
+  },
+  "tooltip_legacy": {
+    "message": "Use the old rendering method (may be faster on some devices)."
+  },
+  "tooltip_pointer": {
+    "message": "Reflection moves in the opposite direction of the mouse."
+  },
+  "tooltip_visualizer": {
+    "message": "Show a dynamic color visualizer based on audio frequencies."
+  }
+}

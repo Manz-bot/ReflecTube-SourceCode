@@ -1,7 +1,7 @@
 {
   "name": "▷ ReflecTube",
-  "version": "0.5.0",
-  "description": "For Youtube & YouTube Music, this extension reflects the youtube interface in a canvas (most especifically the video player)",
+  "version": "0.6.0",
+  "description": "__MSG_extensionDesc__",
   "manifest_version": 3,
   "author": "Manzbot",
   "permissions": [

@@ -13,10 +13,15 @@ const DEFAULT_CONFIG = {
     cameraIntensity: 50,
     framerate: 30,
     smoothness: 60,
-    resolution: 80,
+    resolution: 100,
     legacyMode: false,
     pointerActive: false,
-    visualizerActive: false
+    legacyMode: false,
+    pointerActive: false,
+    visualizerActive: false,
+    // Ambient Mode Defaults
+    ambientMode: false,
+    ambientScale: 110
 };
 
 let config = { ...DEFAULT_CONFIG };
@@ -40,6 +45,10 @@ const els = {
     legacyMode: document.getElementById('legacyMode'),
     pointerActive: document.getElementById('pointerActive'),
     visualizerActive: document.getElementById('visualizerActive'),
+    visualizerActive: document.getElementById('visualizerActive'),
+    ambientMode: document.getElementById('ambientMode'),
+    ambientScale: document.getElementById('ambientScale'),
+    ambientSettings: document.getElementById('ambient-settings'),
     resetBtn: document.getElementById('reset-btn')
 };
 
@@ -54,7 +63,9 @@ const displayEls = {
     framerate: document.getElementById('val-framerate'),
     smoothness: document.getElementById('val-smoothness'),
     resolution: document.getElementById('val-resolution'),
-    cameraIntensity: document.getElementById('val-cameraIntensity')
+    resolution: document.getElementById('val-resolution'),
+    cameraIntensity: document.getElementById('val-cameraIntensity'),
+    ambientScale: document.getElementById('val-ambientScale')
 };
 
 // Load saved settings
@@ -82,6 +93,14 @@ els.resetBtn.addEventListener('click', () => {
 
 function updateUI() {
     els.masterSwitch.checked = config.masterSwitch;
+
+    // Main Container Visibility
+    const mainContainer = document.getElementById('main-settings-container');
+    if (mainContainer) {
+        mainContainer.style.display = config.masterSwitch ? 'block' : 'none';
+        // Also hide/show reset btn if needed, but it's inside the container now.
+    }
+
     els.opacity.value = config.opacity;
     els.blur.value = config.blur;
     els.saturation.value = config.saturation;
@@ -98,6 +117,18 @@ function updateUI() {
     if (els.legacyMode) els.legacyMode.checked = config.legacyMode;
     if (els.pointerActive) els.pointerActive.checked = config.pointerActive;
     if (els.visualizerActive) els.visualizerActive.checked = config.visualizerActive;
+    if (els.ambientMode) els.ambientMode.checked = config.ambientMode;
+    if (els.ambientScale) els.ambientScale.value = config.ambientScale;
+
+    // Toggle Groups
+    const audioGroup = document.getElementById('audio-settings');
+    if (audioGroup) audioGroup.style.display = config.audioEnabled ? 'block' : 'none';
+
+    const cameraGroup = document.getElementById('camera-settings');
+    if (cameraGroup) cameraGroup.style.display = config.cameraShake ? 'block' : 'none';
+
+    const ambientGroup = document.getElementById('ambient-settings');
+    if (ambientGroup) ambientGroup.style.display = config.ambientMode ? 'block' : 'none';
 
     updateLabels();
 }
@@ -114,6 +145,7 @@ function updateLabels() {
     displayEls.framerate.textContent = config.framerate + 'ms';
     displayEls.smoothness.textContent = config.smoothness;
     displayEls.resolution.textContent = config.resolution + 'px';
+    if (displayEls.ambientScale) displayEls.ambientScale.textContent = config.ambientScale + '%';
 
     let camVal = parseInt(config.cameraIntensity);
     let camText = chrome.i18n.getMessage("ui_medium");
@@ -141,14 +173,46 @@ function updateConfigFromUI() {
     if (els.legacyMode) config.legacyMode = els.legacyMode.checked;
     if (els.pointerActive) config.pointerActive = els.pointerActive.checked;
     if (els.visualizerActive) config.visualizerActive = els.visualizerActive.checked;
+    if (els.ambientMode) config.ambientMode = els.ambientMode.checked;
+    if (els.ambientScale) config.ambientScale = parseInt(els.ambientScale.value);
+
+    // Call updateUI to handle visibility logic (or just duplicate it here for responsiveness)
+    // It's cleaner to duplicate just the display parts or call a shared "updateVisibility" function.
+    // For now, let's just toggling inline to ensure it feels instant.
+
+    const mainContainer = document.getElementById('main-settings-container');
+    if (mainContainer) mainContainer.style.display = config.masterSwitch ? 'block' : 'none';
+
+    const audioGroup = document.getElementById('audio-settings');
+    if (audioGroup) audioGroup.style.display = config.audioEnabled ? 'block' : 'none';
+
+    const cameraGroup = document.getElementById('camera-settings');
+    if (cameraGroup) cameraGroup.style.display = config.cameraShake ? 'block' : 'none';
+
+    const ambientGroup = document.getElementById('ambient-settings');
+    if (ambientGroup) ambientGroup.style.display = config.ambientMode ? 'block' : 'none';
+
     updateLabels();
 }
 
-function saveAndNotify() {
-    // Save to storage
-    chrome.storage.sync.set({ rt_config: config });
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+};
 
-    // Notify active tab
+const saveToStorage = debounce(() => {
+    chrome.storage.sync.set({ rt_config: config }, () => {
+        if (chrome.runtime.lastError) {
+            console.error("Storage Error:", chrome.runtime.lastError);
+        }
+    });
+}, 500);
+
+function saveAndNotify() {
+    // Notify active tab IMMEDIATELY for live preview
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]) {
             chrome.tabs.sendMessage(tabs[0].id, {
@@ -157,6 +221,9 @@ function saveAndNotify() {
             });
         }
     });
+
+    // Debounced Storage Save
+    saveToStorage();
 }
 
 function localizeHtml() {
@@ -185,7 +252,8 @@ const featureMap = {
     'cameraShake': 'settings_camera_shake',
     'legacyMode': 'settings_legacy_mode',
     'pointerActive': 'settings_pointer_follow',
-    'visualizerActive': 'settings_visualizer_color'
+    'visualizerActive': 'settings_visualizer_color',
+    'ambientMode': 'settings_ambient_mode'
 };
 
 function initSpeech() {
@@ -240,9 +308,108 @@ function speakChange(elementId, isChecked) {
 
 initSpeech();
 
+const USER = "Manz-bot";
+const REPO = "ReflecTube-SourceCode";
+const BRANCH = "main";
+const MANIFEST_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/manifest.json`;
+
+// Version Check
+(async () => {
+    try {
+        const localManifest = chrome.runtime.getManifest();
+        const localVersion = localManifest.version;
+
+        const response = await fetch(MANIFEST_URL);
+        if (response.ok) {
+            const remoteManifest = await response.json();
+            const remoteVersion = remoteManifest.version;
+
+            console.log(`Local: ${localVersion} | Remote: ${remoteVersion}`);
+
+            if (localVersion !== remoteVersion) {
+                const updateMsg = document.getElementById('update-msg');
+                const updateBtn = document.getElementById('update-btn');
+
+                if (updateMsg && updateBtn) {
+                    //Chequear numericamente si la nueva version es mayor que la local
+                    const localVersionParts = localVersion.split('.').map(Number);
+                    const remoteVersionParts = remoteVersion.split('.').map(Number);
+
+                    let isUpdateAvailable = false;
+                    for (let i = 0; i < localVersionParts.length; i++) {
+                        if (remoteVersionParts[i] > localVersionParts[i]) {
+                            isUpdateAvailable = true;
+                            break;
+                        }
+                    }
+
+                    if (isUpdateAvailable) {
+                        updateMsg.querySelector('div').textContent = updateMsg.querySelector('div').textContent.replace("{version}", remoteVersion);
+                        updateMsg.style.display = 'block';
+                        updateBtn.addEventListener('click', () => {
+                            const downloadUrl = `https://github.com/${USER}/${REPO}/archive/refs/heads/${BRANCH}.zip`;
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = downloadUrl;
+                            downloadLink.download = `${REPO}-${remoteVersion}.zip`;
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                        });
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error checking version:", error);
+    }
+})();
+
+// Tooltips Logic
+const tooltipContainer = document.getElementById('tooltip-container');
+
+function showTooltip(e, text) {
+    if (!tooltipContainer) return;
+    tooltipContainer.textContent = text;
+    tooltipContainer.style.display = 'block';
+    moveTooltip(e);
+}
+
+function hideTooltip() {
+    if (!tooltipContainer) return;
+    tooltipContainer.style.display = 'none';
+}
+
+function moveTooltip(e) {
+    if (!tooltipContainer) return;
+    // Position tooltip near the mouse but ensure it stays on screen
+    const x = e.clientX + 10;
+    const y = e.clientY + 10;
+    tooltipContainer.style.left = `${x}px`;
+    tooltipContainer.style.top = `${y}px`;
+
+    // Boundary check (basic)
+    const rect = tooltipContainer.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        tooltipContainer.style.left = `${e.clientX - rect.width - 10}px`;
+    }
+    if (rect.bottom > window.innerHeight) {
+        tooltipContainer.style.top = `${e.clientY - rect.height - 10}px`;
+    }
+}
+
+document.querySelectorAll('[data-tooltip]').forEach(el => {
+    el.addEventListener('mouseenter', (e) => {
+        const key = el.getAttribute('data-tooltip');
+        const text = chrome.i18n.getMessage(key);
+        if (text) showTooltip(e, text);
+    });
+    el.addEventListener('mouseleave', hideTooltip);
+    el.addEventListener('mousemove', moveTooltip);
+});
+
 // Update Event Listeners to trigger speech
 Object.keys(els).forEach(key => {
-    if (key === 'resetBtn') return;
+    if (key === 'resetBtn' || key === 'ambientSettings') return; // Skip containers/buttons
     if (els[key]) {
         els[key].addEventListener('input', (e) => {
             updateConfigFromUI();

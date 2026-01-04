@@ -13,10 +13,12 @@ let config = {
     cameraIntensity: 50,
     framerate: 30,    // Time in ms between checks
     smoothness: 60,   // 0-100, controls the fade factor
-    resolution: 80,   // Pixel width of the internal canvas
+    resolution: 100,   // Pixel width of the internal canvas
     legacyMode: false, // Switch between Modern (One Canvas) and Legacy (Dual Canvas)
     pointerActive: false, // Inverted pointer follow
-    visualizerActive: false // Dynamic visualizer
+    visualizerActive: false, // Dynamic visualizer
+    ambientMode: false, // Smart Ambient Mode
+    ambientScale: 110 // Scale %
 };
 
 // ----------------------------------------------------------------------
@@ -41,6 +43,7 @@ if (chrome.storage && chrome.storage.sync) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'UPDATE_SETTINGS') {
         const oldLegacy = config.legacyMode;
+        const oldAmbient = config.ambientMode;
         config = { ...config, ...request.payload };
 
         applyGlobalStyles();
@@ -58,11 +61,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         VisualizerManager.updateState();
 
         // Handle Mode Switch or Re-init
-        if (config.legacyMode !== oldLegacy) {
+        if (config.legacyMode !== oldLegacy || config.ambientMode !== oldAmbient) {
             restartEngine();
         } else {
-            // Optional: Live update logic
-            // LegacyEngine handles its own config updates in loop usually
+            // Live update for active engine if needed
+            if (config.ambientMode && AmbientEngine.isActive()) {
+                AmbientEngine.updateConfig();
+            }
         }
     }
 });
@@ -103,15 +108,19 @@ function restartEngine() {
     // Teardown
     ModernEngine.stop();
     LegacyEngine.stop();
+    AmbientEngine.stop();
 
-    // Clear Container
+    // Clear Container (Global Projector)
     let container = document.getElementById('rt-container');
     if (container) {
         container.innerHTML = '';
         container.remove();
     }
 
-    if (config.legacyMode) {
+    // Start appropriate engine
+    if (config.ambientMode) {
+        AmbientEngine.start();
+    } else if (config.legacyMode) {
         LegacyEngine.start();
     } else {
         ModernEngine.start();
@@ -136,7 +145,7 @@ const PointerManager = (() => {
                 const cx = window.innerWidth / 2;
                 const cy = window.innerHeight / 2;
 
-                // Invert factor (adjust sensitivity here, e.g. -20px max)
+                // Invert factor
                 const dx = (cx - e.clientX) / 50;
                 const dy = (cy - e.clientY) / 50;
 
@@ -158,6 +167,68 @@ const PointerManager = (() => {
 })();
 
 // ----------------------------------------------------------------------
+// AUDIO MANAGER (Shared Context)
+// ----------------------------------------------------------------------
+const AudioManager = (() => {
+    let context = null;
+    let analyser = null;
+    let sources = new WeakMap();
+    let isInitialized = false;
+
+    function init() {
+        if (!isInitialized) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                context = new AudioContext();
+                analyser = context.createAnalyser();
+                analyser.smoothingTimeConstant = 0.85;
+                analyser.fftSize = 512;
+                analyser.connect(context.destination);
+                isInitialized = true;
+            } catch (e) {
+                console.error("Reflectube Audio Init Error:", e);
+            }
+        }
+    }
+
+    function connect(videoElement) {
+        if (!videoElement) return;
+        init();
+        if (context && context.state === 'suspended') {
+            context.resume();
+        }
+
+        if (sources.has(videoElement)) return; // Already connected
+
+        try {
+            // Check if there's already a source (some other extensions might mess with this, but we try ours)
+            // Note: createMediaElementSource can only be called once per element. 
+            // If it throws, it means it's already connected.
+            const source = context.createMediaElementSource(videoElement);
+            source.connect(analyser);
+            sources.set(videoElement, source);
+        } catch (e) {
+            // Already connected or error
+            // If already connected by us, WeakMap catches it. 
+            // If connected by external, we might not get audio unless we can hook into it, but usually this throws.
+            // We ignore to prevent crash.
+        }
+    }
+
+    function getAnalyser() {
+        return analyser;
+    }
+
+    function getAudioData(dataArray) {
+        if (analyser) {
+            analyser.getByteFrequencyData(dataArray);
+        }
+    }
+
+    return { init, connect, getAnalyser, getAudioData };
+})();
+
+// ----------------------------------------------------------------------
 // VISUALIZER MANAGER (Dynamic Color)
 // ----------------------------------------------------------------------
 const VisualizerManager = (() => {
@@ -171,15 +242,11 @@ const VisualizerManager = (() => {
 
     function create() {
         if (document.getElementById('rt_visualizer')) return; // Check exists
-        const container = document.getElementById('rt-container'); // Need parent?
-        // Actually usually visualizers are overlaid or underlaid.
-        // Let's create it in body or rt-container?
-        // User's provided code puts it in `container`.
 
         let viz = document.createElement("div");
         viz.id = "rt_visualizer";
         // Styling matches expected flex layout
-        viz.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; display: flex; align-items: flex-end; justify-content: center; opacity: 0.8; pointer-events: none; z-index: 10;";
+        viz.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; display: flex; align-items: flex-end; justify-content: center; opacity: 0.8; pointer-events: none; z-index: 2000;";
 
         // Bars
         const numBars = 64;
@@ -191,36 +258,31 @@ const VisualizerManager = (() => {
             bars.push(bar);
         }
 
-        //container.appendChild(viz);
         document.body.appendChild(viz);
 
         if (!active) viz.style.display = 'none';
+        applyStyles();
+    }
+
+    function applyStyles() {
+        const v = document.getElementById('rt_visualizer');
+        if (v) {
+            // Ensure visibility matches config
+            v.style.display = (active && config.masterSwitch) ? 'flex' : 'none';
+        }
     }
 
     function updateState() {
         active = config.visualizerActive;
         const v = document.getElementById('rt_visualizer');
-        if (v) v.style.display = (active && config.masterSwitch) ? 'flex' : 'none';
         if (active && !v) create();
-    }
-
-    function tick(audioAnalysers, canvasCtx) {
-        if (!active || !config.masterSwitch || !document.getElementById('rt_visualizer')) return;
-
-        // Get frequency data
-        // Audio might be in ModernEngine.audioState or LegacyEngine.audioState
-        // This is tricky as engines are separate.
-        // We will assume engines expose data or we tap into the active one.
-        // Current implementation keeps audio state inside Engine closures.
-        // We should probably rely on Engines passing data TO us OR we make AudioState global.
-        // For now, I'll modify Engines (in `analyzeAudio`) to update Visualizer IF they have data.
+        else applyStyles();
     }
 
     // Called by Engines
     function updateBars(dataArray, bufferLength) {
         if (!active || !config.masterSwitch) return;
 
-        // Sample bars
         const step = Math.floor(bufferLength / 64);
 
         for (let i = 0; i < 64; i++) {
@@ -238,8 +300,6 @@ const VisualizerManager = (() => {
         if (now - lastColorCheck < 200) return; // Throttle 200ms
         lastColorCheck = now;
 
-        // Optimized Color Extraction (Center Sample + Skip)
-        // Sample center 50%
         const sx = Math.floor(width * 0.25);
         const sy = Math.floor(height * 0.25);
         const sw = Math.floor(width * 0.5);
@@ -271,11 +331,6 @@ const VisualizerManager = (() => {
                 b = Math.min(255, b * factor);
 
                 const color = `rgb(${r},${g},${b})`;
-
-                // Keep bars white-ish or colored? User said "Dynamic Colors".
-                // Let's set the bar background.
-                document.getElementById('rt_visualizer').style.setProperty('--viz-color', color);
-
                 bars.forEach(bar => {
                     bar.style.background = color;
                     bar.style.boxShadow = `0 0 10px ${color}`;
@@ -288,7 +343,7 @@ const VisualizerManager = (() => {
 })();
 
 // ----------------------------------------------------------------------
-// MODERN (Single Canvas)
+// MODERN (Single Canvas) - Global
 // ----------------------------------------------------------------------
 const ModernEngine = (() => {
     let loopId = null;
@@ -298,13 +353,6 @@ const ModernEngine = (() => {
         lastImageData: null,
         width: 0,
         height: 0
-    };
-    let audioState = {
-        context: null,
-        analyser: null,
-        source: null,
-        isInitialized: false,
-        currentMediaElement: null
     };
     let state = {
         activeVideo: null,
@@ -343,7 +391,6 @@ const ModernEngine = (() => {
         canvasState.canvas = c;
         canvasState.ctx = c.getContext('2d', { willReadFrequently: true, alpha: false });
 
-        // Re-create Viz if needed
         if (config.visualizerActive) VisualizerManager.create();
     }
 
@@ -361,44 +408,25 @@ const ModernEngine = (() => {
         return playingVideos[0];
     }
 
-    function initAudio(videoElement) {
-        if (audioState.isInitialized && audioState.currentMediaElement === videoElement) return;
-        try {
-            if (!audioState.context) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioState.context = new AudioContext();
-                audioState.analyser = audioState.context.createAnalyser();
-                audioState.analyser.connect(audioState.context.destination);
-                audioState.analyser.smoothingTimeConstant = 0.85;
-                audioState.analyser.fftSize = 512;
-            }
-            if (!videoElement._rt_source) {
-                audioState.source = audioState.context.createMediaElementSource(videoElement);
-                videoElement._rt_source = audioState.source;
-                videoElement._rt_source.connect(audioState.analyser);
-            }
-            audioState.currentMediaElement = videoElement;
-            audioState.isInitialized = true;
-            if (audioState.context.state === 'suspended') audioState.context.resume();
-        } catch (e) { }
-    }
-
     function analyzeAudio() {
-        if (!audioState.isInitialized || (!config.audioEnabled && !config.visualizerActive)) {
+        if (!config.audioEnabled && !config.visualizerActive) {
             state.decibels = 0;
             return;
         }
-        const bufferLength = audioState.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        audioState.analyser.getByteFrequencyData(dataArray);
 
-        // Feed Visualizer
+        const analyser = AudioManager.getAnalyser();
+        if (!analyser) return;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        AudioManager.getAudioData(dataArray);
+
         VisualizerManager.updateBars(dataArray, bufferLength);
 
-        let sum = 0;
-        for (let i = 0; i < bufferLength / 2; i++) sum += dataArray[i];
-        let average = sum / (bufferLength / 2);
         if (config.audioEnabled) {
+            let sum = 0;
+            for (let i = 0; i < bufferLength / 2; i++) sum += dataArray[i];
+            let average = sum / (bufferLength / 2);
             state.decibels = average * (config.sensitivity / 50);
         } else {
             state.decibels = 0;
@@ -418,7 +446,8 @@ const ModernEngine = (() => {
             if (state.activeVideo !== bestVideo) {
                 state.activeVideo = bestVideo;
                 canvasState.lastImageData = null;
-                if (config.audioEnabled || config.visualizerActive) initAudio(state.activeVideo);
+                // Connect Audio Shared
+                if (config.audioEnabled || config.visualizerActive) AudioManager.connect(state.activeVideo);
             }
         }
 
@@ -459,7 +488,6 @@ const ModernEngine = (() => {
         ctx.drawImage(state.activeVideo, 0, 0, targetW, targetH);
         canvasState.lastImageData = ctx.getImageData(0, 0, targetW, targetH);
 
-        // Visualizer Color Update (using low res canvas)
         VisualizerManager.updateColor(ctx, targetW, targetH);
     }
 
@@ -472,207 +500,270 @@ const ModernEngine = (() => {
 // ----------------------------------------------------------------------
 const LegacyEngine = (() => {
     let active = false;
-    let canvasState = {
-        canvas0: null,
-        canvas1: null,
-    };
-    let state = {
-        activeVideo: null,
-        decibels: 0,
-        isShorts: false
-    };
-    let audioState = {
-        context: null,
-        analyser: null,
-        source: null,
-        isInitialized: false,
-        currentMediaElement: null
-    };
-
-    let toggle = false;
-    let lastTime = 0;
+    let canvasState = { canvas0: null, canvas1: null };
     let loopId = null;
 
     function start() {
         active = true;
-        createProjector();
-        loop();
+        ModernEngine.start();
     }
 
     function stop() {
         active = false;
         if (loopId) cancelAnimationFrame(loopId);
-        loopId = null;
-        canvasState.canvas0 = null;
-        canvasState.canvas1 = null;
+        ModernEngine.stop();
     }
 
-    function createProjector() {
-        if (document.getElementById('rt-container')) return;
+    return { start, stop };
+})();
 
-        let container = document.createElement('div');
-        container.id = 'rt-container';
 
-        if (config.cameraShake) container.classList.add('camhand');
-        if (!config.masterSwitch) container.style.display = 'none';
+// ----------------------------------------------------------------------
+// AMBIENT ENGINE (Smart Injection)
+// ----------------------------------------------------------------------
+const AmbientEngine = (() => {
+    let loopId = null;
+    let canvas = null;
+    let ctx = null;
+    let lastImageData = null;
+    let activeVideo = null;
+    let parentContainer = null;
+    let observer = null;
+    let lastTime = 0;
+    let isActiveState = false;
 
-        const app = document.querySelector('ytd-app') || document.body;
-        app.insertAdjacentElement('afterbegin', container);
+    let state = {
+        decibels: 0
+    };
 
-        let c0 = document.createElement('canvas');
-        let c1 = document.createElement('canvas');
+    function isActive() { return isActiveState; }
 
-        c0.setAttribute("oncontextmenu", "return false;");
-        c1.setAttribute("oncontextmenu", "return false;");
+    function start() {
+        isActiveState = true;
+        // Start Loop
+        loopId = requestAnimationFrame(loop);
 
-        container.appendChild(c0);
-        container.appendChild(c1);
+        // Start Observer to detect video changes (Miniplayer, Shorts)
+        observer = new MutationObserver(() => {
+            checkInjection();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
-        canvasState.canvas0 = c0;
-        canvasState.canvas1 = c1;
-
-        // Re-create Viz if needed
-        if (config.visualizerActive) VisualizerManager.create();
+        checkInjection();
     }
 
-    function findActiveVideo() {
+    function stop() {
+        isActiveState = false;
+        if (loopId) cancelAnimationFrame(loopId);
+        if (observer) observer.disconnect();
+        if (canvas) canvas.remove();
+        canvas = null;
+        ctx = null;
+        lastImageData = null;
+        activeVideo = null;
+    }
+
+    function findBestContainer(video) {
+        // YT Music (Specific Request)
+        // Check for song-video first if we are on YTM
+        const songVideo = video.closest('#song-video');
+        if (songVideo) return songVideo;
+
+        // Also check #player-page or #layout for YTM fallback
+        if (location.hostname.includes('music.youtube.com')) {
+            const player = video.closest('ytmusic-player');
+            if (player) return player;
+        }
+
+        // Shorts
+        // Target the inner container that actually holds the video dimensions
+        // Usually ytd-player or html5-video-player inside the reel
+        const shorts = video.closest('ytd-reel-video-renderer');
+        if (shorts) {
+            const innerPlayer = shorts.querySelector('#player-container') || shorts;
+            return innerPlayer;
+        }
+
+        // Miniplayer
+        const mini = video.closest('ytd-miniplayer');
+        if (mini) return mini;
+
+        // Preview (Rich Item / Feed)
+        // Usually hovering a thumbnail
+        const preview = video.closest('#inline-player-container');
+        if (preview) return preview;
+
+        const richItem = video.closest('ytd-rich-item-renderer');
+        if (richItem) {
+            // Try to find the thumbnail container
+            return richItem.querySelector('ytd-thumbnail') || richItem;
+        }
+
+        // Default Player (Main Video)
+        const player = video.closest('#player-container') || video.closest('.html5-video-player');
+        if (player) return player;
+
+        return video.parentElement;
+    }
+
+    function checkInjection() {
         const videos = Array.from(document.querySelectorAll('video'));
-        const playingVideos = videos.filter(v =>
-            !v.paused &&
-            v.style.display !== 'none' &&
-            v.src &&
-            v.readyState > 2
-        );
+        const playing = videos.find(v => !v.paused && v.style.display !== 'none' && v.readyState > 2);
 
-        if (playingVideos.length === 0) return null;
+        // If playing video changed, or canvas is missing
+        if (playing) {
+            // Check if we need to re-inject
+            const newContainer = findBestContainer(playing);
 
-        const shortsVideo = playingVideos.find(v => v.closest('ytd-reel-video-renderer'));
-        if (shortsVideo) return { element: shortsVideo, isShorts: true };
-
-        const mainVideo = playingVideos.find(v => !v.closest('ytd-miniplayer'));
-        if (mainVideo) return { element: mainVideo, isShorts: false };
-
-        return { element: playingVideos[0], isShorts: false };
+            // If we have a canvas but it's not in the right place or video changed
+            if (!canvas || !canvas.isConnected || activeVideo !== playing || parentContainer !== newContainer) {
+                activeVideo = playing;
+                injectCanvas(activeVideo);
+                if (config.audioEnabled || config.visualizerActive) AudioManager.connect(activeVideo);
+            }
+        }
     }
 
-    function initAudio(videoElement) {
-        if (audioState.isInitialized && audioState.currentMediaElement === videoElement) return;
+    function updateConfig() {
+        if (canvas) {
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.transform = `translate(-50%, -50%) scale(${config.ambientScale / 100})`;
+            canvas.style.filter = `blur(${config.blur}px) saturate(${config.saturation}%) brightness(${config.brightness}%) contrast(${config.contrast}%) sepia(${config.sepia}%)`;
+            canvas.style.opacity = config.opacity / 100;
+        }
+    }
 
-        try {
-            if (!audioState.context) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioState.context = new AudioContext();
-                audioState.analyser = audioState.context.createAnalyser();
-                audioState.analyser.connect(audioState.context.destination);
-                audioState.analyser.smoothingTimeConstant = 0.85;
-                audioState.analyser.fftSize = 512;
-            }
+    function injectCanvas(video) {
+        if (canvas) canvas.remove();
 
-            if (!videoElement._rt_source) {
-                audioState.source = audioState.context.createMediaElementSource(videoElement);
-                videoElement._rt_source = audioState.source;
-                videoElement._rt_source.connect(audioState.analyser);
-            }
+        const container = findBestContainer(video);
+        if (!container) return;
+        parentContainer = container;
 
-            audioState.currentMediaElement = videoElement;
-            audioState.isInitialized = true;
+        canvas = document.createElement('canvas');
+        canvas.id = 'rt-ambient-canvas';
 
-            if (audioState.context.state === 'suspended') {
-                audioState.context.resume();
-            }
+        // Style
+        // Sizing Fix: Use 100% W/H and then scale with transform to prevent cutting off
+        // also use overflow: visible on container if possible? No, might break layout.
+        // We use position absolute behind.
+        canvas.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%) scale(${config.ambientScale / 100});
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(${config.blur}px) saturate(${config.saturation}%) brightness(${config.brightness}%) contrast(${config.contrast}%) sepia(${config.sepia}%) opacity(${config.opacity / 100});
+        `;
 
-        } catch (e) { }
+        // Ensure container can hold absolute
+        const style = getComputedStyle(container);
+        if (style.position === 'static') {
+            container.style.position = 'relative';
+        }
+
+        // For YTM #song-video, sometimes it has a specific layout.
+        // Prepend is usually safe for "behind" if z-index is -1.
+        container.prepend(canvas);
+
+        ctx = canvas.getContext('2d', { willReadFrequently: true });
+        lastImageData = null;
     }
 
     function analyzeAudio() {
-        if (!audioState.isInitialized || (!config.audioEnabled && !config.visualizerActive)) {
+        if (!config.audioEnabled && !config.visualizerActive) {
             state.decibels = 0;
             return;
         }
 
-        const bufferLength = audioState.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        audioState.analyser.getByteFrequencyData(dataArray);
+        const analyser = AudioManager.getAnalyser();
+        if (!analyser) return;
 
-        // Feed Visualizer
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        AudioManager.getAudioData(dataArray);
+
         VisualizerManager.updateBars(dataArray, bufferLength);
 
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-        let average = sum / bufferLength;
-
-        const factor = config.sensitivity / 50;
         if (config.audioEnabled) {
-            state.decibels = average * factor;
+            let sum = 0;
+            for (let i = 0; i < bufferLength / 2; i++) sum += dataArray[i];
+            let average = sum / (bufferLength / 2);
+            state.decibels = average * (config.sensitivity / 50);
         } else {
             state.decibels = 0;
         }
     }
 
     function loop(timestamp) {
-        if (!active) return;
+        if (!loopId) return;
         loopId = requestAnimationFrame(loop);
 
-        if (!config.masterSwitch) return;
-
-        // Throttle 
+        if (!config.masterSwitch || !config.ambientMode) return;
         if (timestamp - lastTime < config.framerate) return;
         lastTime = timestamp;
 
-        const bestVideo = findActiveVideo();
-
-        if (bestVideo) {
-            if (state.activeVideo !== bestVideo.element) {
-                state.activeVideo = bestVideo.element;
-                state.isShorts = bestVideo.isShorts;
-                if (config.audioEnabled || config.visualizerActive) initAudio(state.activeVideo);
-            }
-        }
-
-        if (!state.activeVideo || state.activeVideo.paused || state.activeVideo.ended) {
+        if (!activeVideo || activeVideo.paused || !canvas || !ctx) {
+            checkInjection();
             return;
         }
 
         analyzeAudio();
 
-        const targetCanvas = toggle ? canvasState.canvas1 : canvasState.canvas0;
-        const hiddenCanvas = toggle ? canvasState.canvas0 : canvasState.canvas1;
+        // Draw Logic
+        // Use natural dimensions
+        const videoW = activeVideo.videoWidth;
+        const videoH = activeVideo.videoHeight;
+        if (!videoW || !videoH) return;
 
-        if (!targetCanvas || !hiddenCanvas) return;
+        let targetW = config.resolution;
+        let targetH = Math.floor((videoH / videoW) * targetW);
 
-        // Size Sync - Legacy uses full video resolution for quality
-        if (state.activeVideo.videoWidth > 0 && state.activeVideo.videoHeight > 0) {
-            // Note: Use videoWidth/Height instead of style unless style is key. 
-            // In OLD code it used style if present. Safer to use videoWidth.
-            if (targetCanvas.width !== state.activeVideo.videoWidth || targetCanvas.height !== state.activeVideo.videoHeight) {
-                targetCanvas.width = state.activeVideo.videoWidth;
-                targetCanvas.height = state.activeVideo.videoHeight;
-            }
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+            canvas.width = targetW;
+            canvas.height = targetH;
+            lastImageData = null;
         }
 
-        // Audio Reactivity
-        let scale = 110;
-        if (config.audioEnabled) {
-            scale += (state.decibels / 4);
+        // Live Apply Style props (Scale, Opacity etc)
+        // Optimization: Apply only if changed? For now, assigning to style is okay.
+        // Update opacity/scale from config + audio
+
+        let currentScale = config.ambientScale / 100;
+        if (config.audioEnabled && state.decibels > 0) {
+            currentScale += (state.decibels / 500); // Slight bump
         }
-        targetCanvas.style.minWidth = scale + "%";
-        targetCanvas.style.minHeight = scale + "%";
 
-        const ctx = targetCanvas.getContext('2d', { alpha: false, willReadFrequently: true });
+        // Update transforms/filters
+        // Note: Filters set in inject, can update here if needed.
+        // canvas.style.filter = ... (expensive to set every frame? browser should optimize if string same)
+        // We set it on updateConfig and inject.
+        // But for audio reactivity on SCALE, we need to update transform.
+        canvas.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
 
-        // Filter Mapping
-        ctx.filter = `blur(${config.blur}px) saturate(${config.saturation}%) brightness(${config.brightness}%) contrast(${config.contrast}%) sepia(${config.sepia}%)`;
 
-        ctx.drawImage(state.activeVideo, 0, 0, targetCanvas.width, targetCanvas.height);
+        // Trail / Interpolation
+        const alpha = 1 - (config.smoothness / 105);
+        const effectiveAlpha = Math.max(0.01, Math.min(1, alpha));
 
-        targetCanvas.style.opacity = 1;
-        hiddenCanvas.style.opacity = 0;
+        ctx.globalAlpha = 1;
+        if (lastImageData) ctx.putImageData(lastImageData, 0, 0);
 
-        // Visualizer Color
-        VisualizerManager.updateColor(ctx, targetCanvas.width, targetCanvas.height);
+        ctx.globalAlpha = effectiveAlpha;
+        ctx.drawImage(activeVideo, 0, 0, targetW, targetH);
 
-        toggle = !toggle;
+        lastImageData = ctx.getImageData(0, 0, targetW, targetH);
+
+        // Update Visualizer Color
+        if (config.visualizerActive) {
+            VisualizerManager.updateColor(ctx, targetW, targetH);
+        }
     }
 
-    return { start, stop };
+    return { start, stop, isActive, updateConfig };
 })();

@@ -57,10 +57,11 @@ body.lock-scrollbar {
 
 
 /* header */
-ytd-masthead #background, ytd-multi-page-menu-renderer {
+ytd-masthead #background,
+ytd-multi-page-menu-renderer {
     background-color: color-mix(in srgb, var(--yt-spec-base-background), transparent 50%) !important;
     /*notifications panel */
-    backdrop-filter: blur(6px); 
+    backdrop-filter: blur(6px);
 }
 
 /*Search bar*/
@@ -687,7 +688,14 @@ ytmusic-player-bar {
 yt-chip-cloud-chip-renderer[selected] {
     border-radius: 8px;
 }
+
 /*controls*/
-yt-related-chip-cloud-renderer #right-arrow-button, yt-related-chip-cloud-renderer #left-arrow-button {
-    background: transparent !important;
+yt-related-chip-cloud-renderer #right-arrow-button,
+yt-related-chip-cloud-renderer #left-arrow-button {
+    background: transparen t !important;
+}
+
+/* SHORTS video */
+.player-container.ytd-reel-video-renderer {
+    overflow: unset !important;
 }

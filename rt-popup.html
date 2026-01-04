@@ -162,10 +162,60 @@
             margin-top: 10px;
             font-weight: bold;
         }
+
+        /* Update Notification */
+        #update-msg {
+            display: none;
+            background: #2196F3;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #update-msg button {
+            background: white;
+            color: #2196F3;
+            border: none;
+            padding: 4px 10px;
+            margin-top: 4px;
+            border-radius: 2px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #update-msg button:hover {
+            background: #f0f0f0;
+        }
+
+        /* Tooltip */
+        #tooltip-container {
+            position: fixed;
+            background: rgba(20, 20, 20, 0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            max-width: 250px;
+            border: 1px solid #444;
+            line-height: 1.4;
+        }
     </style>
 </head>
 
 <body>
+    <div id="update-msg">
+        <div data-i18n="update_available_msg">New version {version} available!</div>
+        <button id="update-btn" data-i18n="update_btn_text">Download</button>
+    </div>
+    <div id="tooltip-container"></div>
     <h2 style="display:flex;align-items:center;gap:8px;justify-content: center;">
         <svg viewBox="0 0 640.000000 640.000000" style="
     fill: red;
@@ -185,150 +235,180 @@
 
     <!-- Master Switch -->
     <div class="checkbox-row" style="margin-bottom: 20px; font-weight: bold;">
-        <span data-i18n="settings_extension_switch">Extension</span>
+        <span data-i18n="settings_extension_switch" data-tooltip="tooltip_master">Extension</span>
         <label class="switch">
             <input type="checkbox" id="masterSwitch">
             <span class="slider"></span>
         </label>
     </div>
 
-    <!-- Filters Section -->
-    <div class="section-title" data-i18n="settings_filters_title">FILTERS</div>
+    <!-- Main Settings Container (Hidden if Extension is Off) -->
+    <div id="main-settings-container">
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_opacity">Opacity</span>
-            <span id="val-opacity">100%</span>
+        <!-- Filters Section -->
+        <div class="section-title" data-i18n="settings_filters_title">FILTERS</div>
+
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_opacity" data-tooltip="tooltip_opacity">Opacity</span>
+                <span id="val-opacity">100%</span>
+            </div>
+            <input type="range" id="opacity" min="0" max="100" value="100">
         </div>
-        <input type="range" id="opacity" min="0" max="100" value="100">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_blur">Blur</span>
-            <span id="val-blur">0px</span>
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_blur" data-tooltip="tooltip_blur">Blur</span>
+                <span id="val-blur">0px</span>
+            </div>
+            <input type="range" id="blur" min="0" max="50" value="0">
         </div>
-        <input type="range" id="blur" min="0" max="50" value="0">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_saturation">Saturation</span>
-            <span id="val-saturation">100%</span>
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_saturation" data-tooltip="tooltip_saturation">Saturation</span>
+                <span id="val-saturation">100%</span>
+            </div>
+            <input type="range" id="saturation" min="0" max="200" value="100">
         </div>
-        <input type="range" id="saturation" min="0" max="200" value="100">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_brightness">Brightness</span>
-            <span id="val-brightness">100%</span>
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_brightness" data-tooltip="tooltip_brightness">Brightness</span>
+                <span id="val-brightness">100%</span>
+            </div>
+            <input type="range" id="brightness" min="0" max="200" value="100">
         </div>
-        <input type="range" id="brightness" min="0" max="200" value="100">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_contrast">Contrast</span>
-            <span id="val-contrast">100%</span>
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_contrast" data-tooltip="tooltip_contrast">Contrast</span>
+                <span id="val-contrast">100%</span>
+            </div>
+            <input type="range" id="contrast" min="0" max="200" value="100">
         </div>
-        <input type="range" id="contrast" min="0" max="200" value="100">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_sepia">Sepia</span>
-            <span id="val-sepia">0%</span>
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_sepia" data-tooltip="tooltip_sepia">Sepia</span>
+                <span id="val-sepia">0%</span>
+            </div>
+            <input type="range" id="sepia" min="0" max="100" value="0">
         </div>
-        <input type="range" id="sepia" min="0" max="100" value="0">
-    </div>
 
-    <!-- System Section -->
-    <div class="section-title" data-i18n="settings_system_title">SYSTEM</div>
+        <!-- System Section -->
+        <div class="section-title" data-i18n="settings_system_title">SYSTEM</div>
 
-    <div class="checkbox-row">
-        <span data-i18n="settings_audio_reactivity">Audio Reactivity</span>
-        <label class="switch">
-            <input type="checkbox" id="audioEnabled">
-            <span class="slider"></span>
-        </label>
-    </div>
-
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_audio_sensitivity">Audio Sensitivity</span>
-            <span id="val-sensitivity">50</span>
+        <div class="checkbox-row">
+            <span data-i18n="settings_audio_reactivity" data-tooltip="tooltip_audio">Audio Reactivity</span>
+            <label class="switch">
+                <input type="checkbox" id="audioEnabled">
+                <span class="slider"></span>
+            </label>
         </div>
-        <input type="range" id="sensitivity" min="0" max="100" value="50">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_framerate">Frame Rate (ms)</span>
-            <span id="val-framerate">30ms</span>
+        <div id="audio-settings" class="setting-group"
+            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
+            <div class="label-row">
+                <span data-i18n="settings_audio_sensitivity" data-tooltip="tooltip_sensitivity">Audio Sensitivity</span>
+                <span id="val-sensitivity">50</span>
+            </div>
+            <input type="range" id="sensitivity" min="0" max="100" value="50">
         </div>
-        <input type="range" id="framerate" min="10" max="100" value="30" step="5">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_smoothness">Smoothness</span>
-            <span id="val-smoothness">60</span>
+        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+            <span data-i18n="settings_ambient_mode" data-tooltip="tooltip_ambient_mode">Ambient Mode (Based on
+                PearDesktop)</span>
+            <label class="switch">
+                <input type="checkbox" id="ambientMode">
+                <span class="slider"></span>
+            </label>
         </div>
-        <input type="range" id="smoothness" min="0" max="95" value="60">
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_resolution">Resolution (Px)</span>
-            <span id="val-resolution">80px</span>
+        <!-- Ambient Mode Specific Settings (Hidden if disabled) -->
+        <div id="ambient-settings" class="setting-group"
+            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
+            <div class="label-row">
+                <span data-i18n="settings_ambient_size" data-tooltip="tooltip_ambient_size">Ambient Scale (%)</span>
+                <span id="val-ambientScale">100%</span>
+            </div>
+            <input type="range" id="ambientScale" min="50" max="200" value="100">
         </div>
-        <input type="range" id="resolution" min="10" max="480" value="80">
-    </div>
 
-    <div class="checkbox-row">
-        <span data-i18n="settings_camera_shake">Camera Shake (Handheld)</span>
-        <label class="switch">
-            <input type="checkbox" id="cameraShake">
-            <span class="slider"></span>
-        </label>
-    </div>
 
-    <div class="setting-group">
-        <div class="label-row">
-            <span data-i18n="settings_camera_intensity">Camera Intensity</span>
-            <span id="val-cameraIntensity">Medium</span>
+
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_framerate" data-tooltip="tooltip_framerate">Frame Rate (ms)</span>
+                <span id="val-framerate">30ms</span>
+            </div>
+            <input type="range" id="framerate" min="10" max="100" value="30" step="5">
         </div>
-        <input type="range" id="cameraIntensity" min="0" max="100" value="50">
-    </div>
+
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_smoothness" data-tooltip="tooltip_smoothness">Smoothness</span>
+                <span id="val-smoothness">60</span>
+            </div>
+            <input type="range" id="smoothness" min="0" max="95" value="60">
+        </div>
+
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_resolution" data-tooltip="tooltip_resolution">Resolution (Px)</span>
+                <span id="val-resolution">80px</span>
+            </div>
+            <input type="range" id="resolution" min="10" max="480" value="80">
+        </div>
+
+        <div class="checkbox-row">
+            <span data-i18n="settings_camera_shake" data-tooltip="tooltip_camerashake">Camera Shake (Handheld)</span>
+            <label class="switch">
+                <input type="checkbox" id="cameraShake">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div id="camera-settings" class="setting-group"
+            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
+            <div class="label-row">
+                <span data-i18n="settings_camera_intensity" data-tooltip="tooltip_cameraintensity">Camera
+                    Intensity</span>
+                <span id="val-cameraIntensity">Medium</span>
+            </div>
+            <input type="range" id="cameraIntensity" min="0" max="100" value="50">
+        </div>
 
 
-    <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-        <span data-i18n="settings_legacy_mode">Legacy Mode (2 Canvas)</span>
-        <label class="switch">
-            <input type="checkbox" id="legacyMode">
-            <span class="slider"></span>
-        </label>
-    </div>
+        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+            <span data-i18n="settings_legacy_mode" data-tooltip="tooltip_legacy">Legacy Mode (2 Canvas)</span>
+            <label class="switch">
+                <input type="checkbox" id="legacyMode">
+                <span class="slider"></span>
+            </label>
+        </div>
 
-    <!-- Extra Features -->
-    <div class="checkbox-row">
-        <span data-i18n="settings_pointer_follow">Pointer Follow (Inverted)</span>
-        <label class="switch">
-            <input type="checkbox" id="pointerActive">
-            <span class="slider"></span>
-        </label>
-    </div>
+        <!-- Extra Features -->
+        <div class="checkbox-row">
+            <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Pointer Follow (Inverted)</span>
+            <label class="switch">
+                <input type="checkbox" id="pointerActive">
+                <span class="slider"></span>
+            </label>
+        </div>
 
-    <div class="checkbox-row">
-        <span data-i18n="settings_visualizer_color">Audio Visualizer (Color)</span>
-        <label class="switch">
-            <input type="checkbox" id="visualizerActive">
-            <span class="slider"></span>
-        </label>
-    </div>
+        <div class="checkbox-row">
+            <span data-i18n="settings_visualizer_color" data-tooltip="tooltip_visualizer">Audio Visualizer
+                (Color)</span>
+            <label class="switch">
+                <input type="checkbox" id="visualizerActive">
+                <span class="slider"></span>
+            </label>
+        </div>
 
-    <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
+        <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
+
+    </div> <!-- End Main Settings Container -->
 
     <div class="footer">
         v0.5.0 • <span data-i18n="ui_by">By Manzbot</span>
