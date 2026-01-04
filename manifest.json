@@ -1,0 +1,49 @@
+{
+  "name": "▷ ReflecTube",
+  "version": "0.5.0",
+  "description": "For Youtube & YouTube Music, this extension reflects the youtube interface in a canvas (most especifically the video player)",
+  "manifest_version": 3,
+  "author": "Manzbot",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "default_locale": "en",
+  "action": {
+    "default_popup": "rt-popup.html",
+    "default_icon": {
+      "48": "png/icon48.png",
+      "128": "png/icon128.png"
+    }
+  },
+  "icons": {
+    "48": "png/icon48.png",
+    "64": "png/icon64.png",
+    "128": "png/icon128.png",
+    "1080": "png/icon1080.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.youtube.com/*",
+        "https://*.music.youtube.com/*"
+      ],
+      "js": [
+        "rt-page.js"
+      ],
+      "css": [
+        "rt-page.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "png/*"
+      ]
+    }
+  ]
+}

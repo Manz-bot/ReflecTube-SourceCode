@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReflecTube Settings</title>
+    <style>
+        body {
+            width: 320px;
+            background-color: #202020;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            padding: 15px;
+            margin: 0;
+            user-select: none;
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 16px;
+            color: #ddd;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #666;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .setting-group {
+            margin-bottom: 12px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: #aaa;
+        }
+
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            -ms-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ff0000;
+            cursor: pointer;
+            margin-top: -4px;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #444;
+            border-radius: 2px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #ff0000;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(14px);
+        }
+
+        button#reset-btn {
+            background: #333;
+            color: #aaa;
+            border: none;
+            padding: 8px 16px;
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        button#reset-btn:hover {
+            background: #444;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            margin-top: 15px;
+            padding-top: 10px;
+        }
+
+        .warning-text {
+            text-align: center;
+            font-size: 11px;
+            color: #ff9800;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h2 style="display:flex;align-items:center;gap:8px;justify-content: center;">
+        <svg viewBox="0 0 640.000000 640.000000" style="
+    fill: red;
+    width: 20px;
+">
+            <g transform="translate(0.000000,640.000000) scale(0.100000,-0.100000)">
+                <path
+                    d="M1640 6063 c-19 -2 -42 -7 -50 -10 -8 -3 -23 -5 -34 -4 -10 2 -22 -1 -25 -6 -3 -5 -36 -17 -73 -26 -70 -17 -199 -65 -208 -77 -3 -4 -39 -24 -80 -44 -41 -21 -82 -45 -92 -54 -9 -9 -36 -30 -59 -47 -23 -16 -52 -41 -64 -55 -65 -69 -117 -138 -142 -186 -15 -30 -31 -54 -35 -54 -9 0 -64 -146 -73 -192 -4 -21 -12 -38 -17 -38 -6 0 -7 -11 -4 -24 4 -15 1 -26 -7 -29 -19 -6 -18 -4127 1 -4150 8 -9 11 -21 7 -28 -4 -6 -4 -14 1 -18 5 -3 15 -28 22 -56 20 -75 69 -193 91 -217 11 -11 27 -35 35 -53 9 -18 27 -43 42 -56 14 -13 36 -41 50 -62 14 -21 36 -42 49 -47 13 -5 30 -19 37 -30 7 -12 39 -37 70 -56 32 -20 58 -40 58 -45 0 -5 3 -8 8 -7 4 1 30 -10 57 -24 28 -14 77 -34 110 -44 33 -10 63 -22 66 -27 3 -5 12 -7 20 -6 8 1 23 -2 34 -7 31 -14 447 -12 452 2 2 7 13 10 23 7 11 -3 20 -1 20 5 0 6 15 14 33 17 48 11 177 66 177 77 0 5 5 6 10 3 6 -3 10 -2 10 3 0 4 15 15 33 24 37 18 200 153 206 171 2 7 16 26 30 43 14 18 34 42 45 55 21 27 86 162 86 178 0 6 4 11 10 11 5 0 9 3 8 8 -1 4 3 16 9 27 6 11 19 54 29 95 17 68 19 136 24 685 l5 610 20 -21 c11 -12 31 -38 45 -58 14 -20 46 -60 73 -89 26 -28 47 -55 47 -60 0 -5 20 -30 45 -55 25 -25 45 -51 45 -58 0 -7 10 -21 23 -31 12 -10 39 -41 60 -69 20 -29 44 -55 52 -58 8 -3 15 -11 15 -18 0 -8 20 -35 45 -62 24 -27 42 -53 39 -57 -3 -5 -1 -9 5 -9 6 0 30 -26 53 -57 24 -32 53 -66 66 -76 12 -10 22 -24 22 -31 0 -7 20 -33 45 -58 25 -25 45 -50 45 -55 0 -5 21 -32 48 -60 26 -29 58 -68 72 -88 14 -19 44 -56 67 -82 24 -27 43 -52 43 -57 0 -5 16 -24 35 -43 20 -19 47 -52 61 -74 13 -21 28 -39 33 -39 4 0 25 -25 45 -55 20 -31 43 -58 51 -62 8 -3 15 -10 15 -17 0 -6 20 -33 44 -61 71 -80 147 -175 141 -175 -13 0 151 -133 187 -151 21 -11 38 -23 38 -28 0 -9 127 -65 173 -76 15 -4 27 -11 27 -15 0 -12 165 -39 265 -44 92 -4 297 18 303 34 2 4 12 6 22 3 11 -3 20 -1 20 5 0 5 12 13 28 17 41 10 167 66 170 76 2 5 8 7 13 3 5 -3 9 -1 9 4 0 6 20 22 45 36 24 15 51 36 60 48 8 13 15 19 15 14 0 -4 27 18 60 50 33 31 57 60 55 64 -3 5 2 10 10 14 8 3 28 30 46 61 17 30 35 55 41 55 5 0 7 4 4 9 -4 5 -3 11 2 13 11 4 59 115 73 170 7 27 17 48 22 48 5 0 6 7 3 16 -4 9 -2 22 4 29 22 26 34 212 21 328 -7 61 -16 114 -22 118 -5 3 -7 13 -3 22 3 9 2 17 -4 17 -5 0 -12 13 -15 30 -10 47 -69 190 -79 190 -5 0 -6 4 -3 10 3 5 2 10 -3 10 -5 0 -17 15 -25 33 -9 17 -34 52 -56 75 -23 24 -41 47 -41 50 0 4 -19 28 -43 55 -23 26 -53 63 -67 83 -14 20 -39 50 -57 69 -17 18 -43 51 -57 74 -15 22 -30 41 -35 41 -5 0 -25 25 -45 55 -20 30 -44 59 -54 64 -9 6 -14 11 -10 11 7 0 -29 45 -73 91 -15 16 -25 30 -23 32 2 2 -16 26 -41 53 -25 27 -45 54 -45 62 0 7 -7 15 -15 18 -8 3 -32 29 -52 58 -21 28 -48 59 -60 69 -13 10 -23 24 -23 30 0 7 -16 29 -34 49 -19 21 -31 40 -26 43 5 3 32 3 60 -1 31 -4 50 -3 50 3 0 6 25 13 56 17 64 7 274 73 274 85 0 5 22 18 49 30 48 20 174 106 215 146 53 52 166 187 166 199 0 4 9 16 19 28 20 20 81 141 81 158 0 6 5 10 11 10 6 0 9 6 6 14 -3 8 -2 16 4 18 5 2 21 48 36 103 l28 100 0 690 0 690 -27 99 c-15 55 -33 103 -39 107 -6 4 -8 12 -5 18 4 6 3 11 -2 11 -5 0 -20 25 -32 56 -13 30 -33 71 -46 90 -13 19 -22 34 -19 34 2 0 -9 15 -26 32 -16 18 -29 36 -29 40 0 8 -86 94 -179 180 -22 20 -70 53 -108 74 -37 21 -71 43 -75 48 -5 7 -8 7 -8 1 0 -6 -3 -6 -8 1 -9 14 -130 59 -217 80 -38 10 -73 22 -77 28 -5 8 -472 11 -1620 12 -887 1 -1629 -1 -1648 -3z m3163 -304 c31 -7 57 -16 57 -21 0 -6 7 -8 15 -4 8 3 15 2 15 -3 0 -4 19 -14 43 -21 54 -16 157 -68 157 -79 0 -5 13 -14 29 -21 35 -14 166 -142 187 -182 8 -15 19 -28 25 -28 6 0 8 -4 5 -9 -3 -5 0 -11 7 -14 8 -3 29 -40 47 -84 19 -43 38 -81 43 -84 5 -4 6 -12 3 -18 -4 -6 -3 -11 2 -11 5 0 16 -28 23 -62 11 -50 14 -185 14 -643 0 -458 -3 -593 -14 -642 -7 -35 -17 -63 -22 -63 -5 0 -6 -7 -3 -15 4 -8 2 -15 -4 -15 -6 0 -16 -17 -22 -37 -16 -48 -62 -133 -73 -133 -5 0 -5 -4 -2 -10 3 -5 2 -10 -3 -10 -6 0 -27 -25 -47 -55 -20 -31 -54 -67 -75 -81 -21 -14 -41 -31 -43 -38 -5 -12 -138 -96 -152 -96 -4 0 -13 -7 -21 -15 -21 -20 -158 -62 -232 -71 -34 -3 -62 -9 -62 -13 0 -3 -137 -4 -305 -3 -341 4 -338 5 -270 -62 19 -20 35 -39 35 -43 0 -5 20 -30 45 -57 25 -27 43 -51 42 -53 -2 -2 20 -29 49 -60 29 -32 51 -60 48 -64 -2 -4 2 -9 10 -12 8 -3 30 -30 49 -59 20 -29 45 -59 56 -66 12 -7 21 -18 21 -25 0 -7 18 -30 40 -52 22 -22 47 -51 55 -65 7 -14 26 -39 42 -56 40 -44 93 -112 93 -119 0 -3 23 -29 50 -57 28 -28 50 -57 50 -64 0 -8 10 -20 23 -29 12 -8 35 -35 51 -59 16 -25 39 -52 52 -61 13 -8 24 -21 24 -28 0 -8 20 -35 45 -60 25 -26 45 -50 45 -54 0 -3 21 -30 46 -59 25 -30 43 -54 41 -54 -3 0 10 -17 29 -38 59 -64 73 -82 66 -82 -3 0 3 -7 15 -15 13 -9 30 -31 38 -49 9 -18 25 -43 36 -55 11 -11 16 -21 12 -21 -4 0 -3 -4 3 -8 26 -17 64 -182 64 -281 0 -108 -38 -281 -61 -281 -6 0 -7 -5 -3 -11 3 -6 2 -14 -3 -18 -12 -8 -73 -100 -73 -109 0 -4 -21 -25 -47 -47 -27 -21 -52 -45 -56 -52 -4 -7 -38 -29 -75 -50 -37 -20 -69 -40 -73 -45 -3 -4 -41 -17 -85 -29 -110 -29 -267 -28 -373 2 -42 13 -78 26 -81 29 -3 3 -34 23 -70 43 -41 23 -90 63 -132 109 -98 105 -117 128 -112 128 3 0 -15 24 -40 54 -25 29 -46 58 -46 63 0 6 -11 18 -24 26 -13 9 -39 39 -57 67 -18 27 -36 50 -40 50 -4 0 -24 24 -44 54 -20 30 -47 61 -60 70 -14 9 -25 22 -25 30 0 7 -20 33 -45 58 -25 25 -45 49 -45 53 0 8 -54 76 -102 129 -21 23 -38 45 -38 50 0 4 -20 29 -45 54 -25 25 -45 50 -45 55 0 5 -20 30 -45 55 -25 25 -45 51 -45 58 0 8 -13 23 -30 36 -16 12 -30 27 -30 33 0 6 -20 32 -43 58 -24 26 -42 48 -40 50 2 2 -13 21 -33 42 -19 21 -43 50 -52 64 -9 14 -22 30 -29 34 -7 4 -28 31 -47 60 -19 29 -44 58 -55 65 -12 7 -21 18 -21 25 0 7 -22 37 -50 66 -27 29 -50 56 -50 60 0 3 -19 27 -42 53 -24 26 -54 63 -68 84 -39 57 -92 103 -132 116 -21 6 -38 14 -38 18 0 4 -29 7 -65 6 -36 0 -65 -3 -65 -6 0 -3 -21 -11 -46 -18 -53 -14 -126 -81 -149 -136 -13 -30 -15 -136 -15 -726 0 -604 -2 -699 -16 -755 -9 -36 -20 -65 -25 -65 -5 0 -9 -5 -9 -11 0 -10 -24 -61 -61 -129 -32 -59 -180 -186 -238 -205 -11 -3 -27 -13 -36 -21 -27 -27 -161 -54 -270 -54 -98 0 -251 28 -264 48 -4 5 -31 20 -62 34 -60 27 -181 138 -215 196 -10 17 -22 32 -27 32 -4 0 -5 5 -2 10 3 6 2 10 -3 10 -12 0 -47 82 -62 145 -7 28 -14 56 -16 63 -5 18 -5 3836 0 3854 2 7 9 40 16 73 16 77 49 165 61 165 6 0 7 5 3 11 -3 6 -3 14 2 18 5 3 26 33 46 67 39 64 137 169 203 218 22 17 42 33 45 36 11 14 99 58 148 75 28 11 52 22 52 27 0 4 7 5 16 1 9 -3 19 -1 23 4 3 6 26 15 51 21 67 15 3059 16 3133 1z">
+                </path>
+                <path
+                    d="M2320 4345 c0 -693 3 -1065 10 -1065 15 0 144 70 151 82 4 6 12 7 18 4 6 -4 11 -2 11 3 0 6 33 27 73 47 39 20 74 40 77 44 3 4 43 27 90 50 47 24 86 47 88 51 2 5 40 27 85 50 45 23 84 45 87 49 3 4 43 26 90 50 47 24 87 47 90 51 3 4 37 24 75 45 39 21 72 42 73 46 2 5 8 6 13 2 5 -3 9 -1 9 3 0 5 36 27 80 48 44 21 80 43 80 48 0 4 5 5 10 2 6 -3 10 -2 10 4 0 6 24 22 54 36 30 14 70 37 91 50 20 14 60 37 88 52 29 14 64 34 78 44 14 10 29 16 33 12 3 -3 6 -2 6 4 0 6 34 28 75 49 41 21 75 42 75 47 0 4 5 5 10 2 6 -3 10 -2 10 2 0 5 32 24 70 43 39 19 70 36 70 38 0 10 -38 34 -115 73 -44 23 -81 45 -83 49 -2 5 -41 27 -87 49 -46 23 -85 45 -87 50 -2 5 -41 28 -88 51 -47 23 -87 46 -90 50 -3 4 -38 25 -77 45 -40 21 -73 42 -73 48 0 6 -3 7 -6 4 -4 -4 -19 2 -33 12 -14 10 -49 30 -78 44 -28 15 -68 38 -88 52 -21 13 -61 36 -91 51 -30 14 -54 31 -54 36 0 5 -4 6 -10 3 -5 -3 -10 -2 -10 2 0 5 -36 27 -80 48 -44 21 -80 43 -80 48 0 4 -4 5 -10 2 -5 -3 -10 -2 -10 3 0 5 -30 24 -66 42 -36 18 -71 38 -77 44 -7 7 -50 31 -97 55 -47 24 -87 47 -90 51 -3 4 -43 27 -90 50 -47 23 -87 47 -88 52 -4 9 -99 58 -114 58 -4 0 -8 -479 -8 -1065z">
+                </path>
+            </g>
+        </svg>
+        ReflecTube
+    </h2>
+
+    <!-- Master Switch -->
+    <div class="checkbox-row" style="margin-bottom: 20px; font-weight: bold;">
+        <span data-i18n="settings_extension_switch">Extension</span>
+        <label class="switch">
+            <input type="checkbox" id="masterSwitch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="section-title" data-i18n="settings_filters_title">FILTERS</div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_opacity">Opacity</span>
+            <span id="val-opacity">100%</span>
+        </div>
+        <input type="range" id="opacity" min="0" max="100" value="100">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_blur">Blur</span>
+            <span id="val-blur">0px</span>
+        </div>
+        <input type="range" id="blur" min="0" max="50" value="0">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_saturation">Saturation</span>
+            <span id="val-saturation">100%</span>
+        </div>
+        <input type="range" id="saturation" min="0" max="200" value="100">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_brightness">Brightness</span>
+            <span id="val-brightness">100%</span>
+        </div>
+        <input type="range" id="brightness" min="0" max="200" value="100">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_contrast">Contrast</span>
+            <span id="val-contrast">100%</span>
+        </div>
+        <input type="range" id="contrast" min="0" max="200" value="100">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_sepia">Sepia</span>
+            <span id="val-sepia">0%</span>
+        </div>
+        <input type="range" id="sepia" min="0" max="100" value="0">
+    </div>
+
+    <!-- System Section -->
+    <div class="section-title" data-i18n="settings_system_title">SYSTEM</div>
+
+    <div class="checkbox-row">
+        <span data-i18n="settings_audio_reactivity">Audio Reactivity</span>
+        <label class="switch">
+            <input type="checkbox" id="audioEnabled">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_audio_sensitivity">Audio Sensitivity</span>
+            <span id="val-sensitivity">50</span>
+        </div>
+        <input type="range" id="sensitivity" min="0" max="100" value="50">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_framerate">Frame Rate (ms)</span>
+            <span id="val-framerate">30ms</span>
+        </div>
+        <input type="range" id="framerate" min="10" max="100" value="30" step="5">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_smoothness">Smoothness</span>
+            <span id="val-smoothness">60</span>
+        </div>
+        <input type="range" id="smoothness" min="0" max="95" value="60">
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_resolution">Resolution (Px)</span>
+            <span id="val-resolution">80px</span>
+        </div>
+        <input type="range" id="resolution" min="10" max="480" value="80">
+    </div>
+
+    <div class="checkbox-row">
+        <span data-i18n="settings_camera_shake">Camera Shake (Handheld)</span>
+        <label class="switch">
+            <input type="checkbox" id="cameraShake">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="setting-group">
+        <div class="label-row">
+            <span data-i18n="settings_camera_intensity">Camera Intensity</span>
+            <span id="val-cameraIntensity">Medium</span>
+        </div>
+        <input type="range" id="cameraIntensity" min="0" max="100" value="50">
+    </div>
+
+
+    <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+        <span data-i18n="settings_legacy_mode">Legacy Mode (2 Canvas)</span>
+        <label class="switch">
+            <input type="checkbox" id="legacyMode">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- Extra Features -->
+    <div class="checkbox-row">
+        <span data-i18n="settings_pointer_follow">Pointer Follow (Inverted)</span>
+        <label class="switch">
+            <input type="checkbox" id="pointerActive">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="checkbox-row">
+        <span data-i18n="settings_visualizer_color">Audio Visualizer (Color)</span>
+        <label class="switch">
+            <input type="checkbox" id="visualizerActive">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
+
+    <div class="footer">
+        v0.5.0 • <span data-i18n="ui_by">By Manzbot</span>
+    </div>
+
+    <script src="rt-popup.js"></script>
+</body>
+
+</html>
