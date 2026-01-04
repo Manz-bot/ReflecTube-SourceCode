@@ -692,10 +692,11 @@ yt-chip-cloud-chip-renderer[selected] {
 /*controls*/
 yt-related-chip-cloud-renderer #right-arrow-button,
 yt-related-chip-cloud-renderer #left-arrow-button {
-    background: transparen t !important;
+    background: transparent !important;
 }
 
 /* SHORTS video */
 .player-container.ytd-reel-video-renderer {
     overflow: unset !important;
+
 }
