@@ -296,6 +296,22 @@
             <input type="range" id="sepia" min="0" max="100" value="0">
         </div>
 
+        <div class="setting-group">
+            <div class="label-row">
+                <span data-i18n="settings_invert" data-tooltip="tooltip_invert">Invert</span>
+                <span id="val-invert">0%</span>
+            </div>
+            <input type="range" id="invert" min="0" max="100" value="0">
+        </div>
+
+        <div class="checkbox-row">
+            <span data-i18n="settings_hueloop" data-tooltip="tooltip_hueloop">Hue Loop Animation</span>
+            <label class="switch">
+                <input type="checkbox" id="hueLoop">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <!-- System Section -->
         <div class="section-title" data-i18n="settings_system_title">SYSTEM</div>
 
@@ -411,11 +427,10 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.6.0 • <span data-i18n="ui_by">By Manzbot</span>
+        v0.7.0 • <span data-i18n="ui_by">By Manzbot</span>
     </div>
 
     <script src="rt-popup.js"></script>
 </body>
-
 
 </html>

@@ -6,7 +6,10 @@ const DEFAULT_CONFIG = {
     saturation: 100,
     brightness: 75,
     contrast: 100,
+    contrast: 100,
     sepia: 0,
+    invert: 0,
+    hueLoop: false,
     sensitivity: 50,
     audioEnabled: true,
     cameraShake: false,
@@ -34,7 +37,10 @@ const els = {
     saturation: document.getElementById('saturation'),
     brightness: document.getElementById('brightness'),
     contrast: document.getElementById('contrast'),
+    contrast: document.getElementById('contrast'),
     sepia: document.getElementById('sepia'),
+    invert: document.getElementById('invert'),
+    hueLoop: document.getElementById('hueLoop'),
     sensitivity: document.getElementById('sensitivity'),
     framerate: document.getElementById('framerate'),
     smoothness: document.getElementById('smoothness'),
@@ -58,7 +64,9 @@ const displayEls = {
     saturation: document.getElementById('val-saturation'),
     brightness: document.getElementById('val-brightness'),
     contrast: document.getElementById('val-contrast'),
+    contrast: document.getElementById('val-contrast'),
     sepia: document.getElementById('val-sepia'),
+    invert: document.getElementById('val-invert'),
     sensitivity: document.getElementById('val-sensitivity'),
     framerate: document.getElementById('val-framerate'),
     smoothness: document.getElementById('val-smoothness'),
@@ -107,6 +115,8 @@ function updateUI() {
     els.brightness.value = config.brightness;
     els.contrast.value = config.contrast;
     els.sepia.value = config.sepia;
+    els.invert.value = config.invert;
+    els.hueLoop.checked = config.hueLoop;
     els.sensitivity.value = config.sensitivity;
     els.framerate.value = config.framerate;
     els.smoothness.value = config.smoothness;
@@ -140,6 +150,7 @@ function updateLabels() {
     displayEls.brightness.textContent = config.brightness + '%';
     displayEls.contrast.textContent = config.contrast + '%';
     displayEls.sepia.textContent = config.sepia + '%';
+    displayEls.invert.textContent = config.invert + '%';
     displayEls.sensitivity.textContent = config.sensitivity;
 
     displayEls.framerate.textContent = config.framerate + 'ms';
@@ -162,7 +173,10 @@ function updateConfigFromUI() {
     config.saturation = parseInt(els.saturation.value);
     config.brightness = parseInt(els.brightness.value);
     config.contrast = parseInt(els.contrast.value);
+    config.contrast = parseInt(els.contrast.value);
     config.sepia = parseInt(els.sepia.value);
+    config.invert = parseInt(els.invert.value);
+    config.hueLoop = els.hueLoop.checked;
     config.sensitivity = parseInt(els.sensitivity.value);
     config.framerate = parseInt(els.framerate.value);
     config.smoothness = parseInt(els.smoothness.value);
@@ -253,7 +267,8 @@ const featureMap = {
     'legacyMode': 'settings_legacy_mode',
     'pointerActive': 'settings_pointer_follow',
     'visualizerActive': 'settings_visualizer_color',
-    'ambientMode': 'settings_ambient_mode'
+    'ambientMode': 'settings_ambient_mode',
+    'hueLoop': 'settings_hueloop'
 };
 
 function initSpeech() {
@@ -422,3 +437,28 @@ Object.keys(els).forEach(key => {
         });
     }
 });
+
+const applyStylesToIframe = () => {
+    console.log("Aplicando estilos al iframe");
+    const iframe = document.getElementById('chatframe');
+    if (iframe && iframe.contentDocument) {
+        const style = document.createElement('style');
+        style.textContent = `
+      yt-live-chat-renderer.style-scope.yt-live-chat-app {
+    background: red !important;
+}
+
+yt-live-chat-app {
+    background: red !important;
+}
+
+    `;
+        iframe.contentDocument.head.appendChild(style);
+    }
+};
+
+// Ejecutar cuando el iframe cargue
+const chatFrame = document.getElementById('chat-container');
+if (chatFrame) {
+    chatFrame.addEventListener('load', applyStylesToIframe);
+}

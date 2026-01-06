@@ -259,5 +259,17 @@
   },
   "tooltip_visualizer": {
     "message": "Muestra un visualizador de color dinámico basado en frecuencias de audio."
+  },
+  "settings_invert": {
+    "message": "Invertir"
+  },
+  "settings_hueloop": {
+    "message": "Animación de Bucle de Matiz"
+  },
+  "tooltip_invert": {
+    "message": "Invierte los colores del reflejo."
+  },
+  "tooltip_hueloop": {
+    "message": "Ciclo de colores automático y continuo."
   }
 }

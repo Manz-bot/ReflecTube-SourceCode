@@ -6,7 +6,10 @@ let config = {
     saturation: 100,
     brightness: 75,
     contrast: 100,
+    contrast: 100,
     sepia: 0,
+    invert: 0,
+    hueLoop: false,
     sensitivity: 50,
     audioEnabled: true,
     cameraShake: false,
@@ -91,10 +94,18 @@ function applyGlobalStyles() {
     root.style.setProperty('--rt_brightness', (config.brightness || 100) + '%');
     root.style.setProperty('--rt_contrast', (config.contrast || 100) + '%');
     root.style.setProperty('--rt_sepia', (config.sepia || 0) + '%');
+    root.style.setProperty('--rt_invert', (config.invert || 0) + '%');
+
+    if (!config.hueLoop) {
+        root.style.setProperty('--rt_hue-rotate', '0deg');
+    }
 
     // Camera Intensity
     const factor = config.cameraIntensity / 50;
     root.style.setProperty('--fuerza', factor.toFixed(2));
+
+    // Effect Update
+    EffectManager.updateState();
 }
 
 function init() {
@@ -252,7 +263,8 @@ const VisualizerManager = (() => {
         const numBars = 64;
         for (let i = 0; i < numBars; i++) {
             let bar = document.createElement("div");
-            bar.style.cssText = "flex: 1; margin: 0 1px; background: white; transition: height 0.05s ease; border-radius: 2px 2px 0 0;";
+            // Improved transitions for color and height/opacity
+            bar.style.cssText = "flex: 1; margin: 0 1px; background: white; transition: height 0.1s ease, background-color 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease; border-radius: 2px 2px 0 0;";
             bar.style.height = "2px";
             viz.appendChild(bar);
             bars.push(bar);
@@ -263,6 +275,8 @@ const VisualizerManager = (() => {
         if (!active) viz.style.display = 'none';
         applyStyles();
     }
+
+
 
     function applyStyles() {
         const v = document.getElementById('rt_visualizer');
@@ -284,12 +298,27 @@ const VisualizerManager = (() => {
         if (!active || !config.masterSwitch) return;
 
         const step = Math.floor(bufferLength / 64);
+        let totalVol = 0;
+
+        // Calculate average volume to detect silence
+        for (let i = 0; i < 64; i++) {
+            totalVol += dataArray[i * step] || 0;
+        }
+        const avgVol = totalVol / 64;
+        const isSilent = avgVol < 5; // Threshold for silence
 
         for (let i = 0; i < 64; i++) {
             if (bars[i]) {
-                const val = dataArray[i * step] || 0;
-                const h = (val / 255) * 50; // Max 50% height
-                bars[i].style.height = Math.max(2, h) + "%";
+                if (isSilent) {
+                    // Flatten and disappear
+                    bars[i].style.height = "0px";
+                    bars[i].style.opacity = "0";
+                } else {
+                    const val = dataArray[i * step] || 0;
+                    const h = (val / 255) * 50; // Max 50% height
+                    bars[i].style.height = Math.max(2, h) + "%";
+                    bars[i].style.opacity = "1";
+                }
             }
         }
     }
@@ -340,6 +369,38 @@ const VisualizerManager = (() => {
     }
 
     return { init, updateState, create, updateBars, updateColor };
+})();
+
+// ----------------------------------------------------------------------
+// EFFECT MANAGER (Hue Loop)
+// ----------------------------------------------------------------------
+const EffectManager = (() => {
+    let loopId = null;
+    let hue = 0;
+    let lastTime = 0;
+
+    function updateState() {
+        if (config.hueLoop && config.masterSwitch) {
+            if (!loopId) loopId = requestAnimationFrame(loop);
+        } else {
+            if (loopId) cancelAnimationFrame(loopId);
+            loopId = null;
+            document.documentElement.style.setProperty('--rt_hue-rotate', '0deg');
+        }
+    }
+
+    function loop(timestamp) {
+        if (!loopId) return;
+        loopId = requestAnimationFrame(loop);
+
+        if (timestamp - lastTime < 50) return; // 20fps for color cycle is enough
+        lastTime = timestamp;
+
+        hue = (hue + 1) % 360;
+        document.documentElement.style.setProperty('--rt_hue-rotate', hue + 'deg');
+    }
+
+    return { updateState };
 })();
 
 // ----------------------------------------------------------------------
