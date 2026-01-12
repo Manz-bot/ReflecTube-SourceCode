@@ -138,7 +138,6 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 11px;
-            margin-top: 20px;
             transition: background 0.2s;
         }
 
@@ -207,6 +206,49 @@
             border: 1px solid #444;
             line-height: 1.4;
         }
+
+        /* NEW STYLES */
+        details.section-group {
+            background: #2a2a2a;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border: 1px solid #333;
+        }
+
+        details.section-group[open] {
+            border-color: #444;
+            background: #252525;
+        }
+
+        summary.section-title {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            margin: 0;
+        }
+
+        summary.section-title::-webkit-details-marker {
+            display: none;
+        }
+
+        summary.section-title::after {
+            content: '+';
+            font-size: 14px;
+            color: #666;
+            margin-right: 5px;
+        }
+
+        details[open] summary.section-title::after {
+            content: '-';
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -245,8 +287,35 @@
     <!-- Main Settings Container (Hidden if Extension is Off) -->
     <div id="main-settings-container">
 
-        <!-- Filters Section -->
-        <div class="section-title" data-i18n="settings_filters_title">FILTERS</div>
+        <!-- Profiles Section -->
+        <details class="section-group" open>
+            <summary class="section-title" data-i18n="settings_profiles_title">PROFILES</summary>
+            <div class="setting-group" style="display:flex; gap:5px; margin-bottom:10px;">
+                <select id="profile-select"
+                    style="flex:1; background:#333; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
+                    <option value="Default">Default</option>
+                    <option value="_NEW_">➕ New Profile</option>
+                </select>
+                <button id="profile-save-btn" class="settings-btn"
+                    style="width: 25%; background: #4CAF50; border:none; color:white; padding:5px; border-radius:4px; cursor:pointer;"
+                    data-i18n="profile_save">Save</button>
+                <button id="profile-delete-btn" class="settings-btn"
+                    style="background: #e74c3c; border:none; color:white; padding:5px 10px; border-radius:4px; cursor:pointer;"
+                    data-i18n="profile_delete">Delete</button>
+            </div>
+        </details>
+    </div>
+    <div id="newProfileContainer" style="display:none; margin-bottom:10px; gap:5px;">
+        <input type="text" id="newProfileName" placeholder="New Profile Name"
+            style="flex:1; background:#333; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
+        <button id="confirmSaveProfile"
+            style="background:#2196F3; color:white; border:none; padding:5px; border-radius:4px;">Save</button>
+    </div>
+    </details>
+
+    <!-- Filters Section -->
+    <details class="section-group">
+        <summary class="section-title" data-i18n="settings_filters_title">FILTERS</summary>
 
         <div class="setting-group">
             <div class="label-row">
@@ -311,9 +380,11 @@
                 <span class="slider"></span>
             </label>
         </div>
+    </details>
 
-        <!-- System Section -->
-        <div class="section-title" data-i18n="settings_system_title">SYSTEM</div>
+    <!-- Effects & Visuals -->
+    <details class="section-group">
+        <summary class="section-title" data-i18n="settings_effects_title">EFFECTS</summary>
 
         <div class="checkbox-row">
             <span data-i18n="settings_audio_reactivity" data-tooltip="tooltip_audio">Audio Reactivity</span>
@@ -326,22 +397,21 @@
         <div id="audio-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
-                <span data-i18n="settings_audio_sensitivity" data-tooltip="tooltip_sensitivity">Audio Sensitivity</span>
+                <span data-i18n="settings_audio_sensitivity" data-tooltip="tooltip_sensitivity">Audio
+                    Sensitivity</span>
                 <span id="val-sensitivity">50</span>
             </div>
             <input type="range" id="sensitivity" min="0" max="100" value="50">
         </div>
 
-        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-            <span data-i18n="settings_ambient_mode" data-tooltip="tooltip_ambient_mode">Ambient Mode (Based on
-                PearDesktop)</span>
+        <div class="checkbox-row" style="margin-top: 10px;">
+            <span data-i18n="settings_ambient_mode" data-tooltip="tooltip_ambient_mode">Ambient Mode</span>
             <label class="switch">
                 <input type="checkbox" id="ambientMode">
                 <span class="slider"></span>
             </label>
         </div>
 
-        <!-- Ambient Mode Specific Settings (Hidden if disabled) -->
         <div id="ambient-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
@@ -351,7 +421,50 @@
             <input type="range" id="ambientScale" min="50" max="200" value="100">
         </div>
 
+        <div class="checkbox-row" style="margin-top: 10px;">
+            <span data-i18n="settings_camera_shake" data-tooltip="tooltip_camerashake">Camera Shake</span>
+            <label class="switch">
+                <input type="checkbox" id="cameraShake">
+                <span class="slider"></span>
+            </label>
+        </div>
 
+        <div id="camera-settings" class="setting-group"
+            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
+            <div class="label-row">
+                <span data-i18n="settings_camera_intensity" data-tooltip="tooltip_cameraintensity">Intensity</span>
+                <span id="val-cameraIntensity">Medium</span>
+            </div>
+            <input type="range" id="cameraIntensity" min="0" max="100" value="50">
+        </div>
+
+        <div class="checkbox-row">
+            <span data-i18n="settings_visualizer_color" data-tooltip="tooltip_visualizer">Audio Visualizer</span>
+            <label class="switch">
+                <input type="checkbox" id="visualizerActive">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="checkbox-row">
+            <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Prioritize Performance</span>
+            <label class="switch">
+                <input type="checkbox" id="pointerActive">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+            <span data-i18n="settings_webgl" data-tooltip="tooltip_webgl">WebGL Renderer (GPU)</span>
+            <label class="switch">
+                <input type="checkbox" id="webglActive">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </details>
+
+    <!-- System -->
+    <details class="section-group">
+        <summary class="section-title" data-i18n="settings_system_title">SYSTEM</summary>
 
         <div class="setting-group">
             <div class="label-row">
@@ -377,57 +490,43 @@
             <input type="range" id="resolution" min="10" max="480" value="80">
         </div>
 
-        <div class="checkbox-row">
-            <span data-i18n="settings_camera_shake" data-tooltip="tooltip_camerashake">Camera Shake (Handheld)</span>
-            <label class="switch">
-                <input type="checkbox" id="cameraShake">
-                <span class="slider"></span>
-            </label>
-        </div>
 
-        <div id="camera-settings" class="setting-group"
-            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
-            <div class="label-row">
-                <span data-i18n="settings_camera_intensity" data-tooltip="tooltip_cameraintensity">Camera
-                    Intensity</span>
-                <span id="val-cameraIntensity">Medium</span>
+
+    </details>
+
+    <div style="display: flex; gap: 5px; margin-top: 20px; margin-bottom: 5px;">
+        <button id="profile-export-btn" class="settings-btn"
+            style="background: #3498db; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
+            data-i18n="profile_export">Export Profile</button>
+        <button id="profile-import-btn" class="settings-btn"
+            style="background: #9b59b6; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
+            data-i18n="profile_import">Import Profile</button>
+    </div>
+    <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
+
+    <!-- New Profile Modal Overlay -->
+    <div id="new-profile-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center; flex-direction:column;">
+        <div style="background:#333; padding:20px; border-radius:8px; border:1px solid #555; width:80%;">
+            <h3 style="margin-top:0; color:#fff; font-size:14px;" data-i18n="profile_modal_title">Name New Profile</h3>
+            <input type="text" id="new-profile-input" placeholder="Profile Name"
+                style="width:100%; padding:8px; margin:10px 0; background:#222; border:1px solid #444; color:#fff; border-radius:4px; box-sizing:border-box;"
+                data-i18n-placeholder="profile_modal_placeholder">
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="cancel-new-profile"
+                    style="background:#555; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"
+                    data-i18n="profile_modal_cancel">Cancel</button>
+                <button id="confirm-new-profile"
+                    style="background:#2196F3; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;"
+                    data-i18n="profile_modal_create">Create</button>
             </div>
-            <input type="range" id="cameraIntensity" min="0" max="100" value="50">
         </div>
-
-
-        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-            <span data-i18n="settings_legacy_mode" data-tooltip="tooltip_legacy">Legacy Mode (2 Canvas)</span>
-            <label class="switch">
-                <input type="checkbox" id="legacyMode">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <!-- Extra Features -->
-        <div class="checkbox-row">
-            <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Pointer Follow (Inverted)</span>
-            <label class="switch">
-                <input type="checkbox" id="pointerActive">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div class="checkbox-row">
-            <span data-i18n="settings_visualizer_color" data-tooltip="tooltip_visualizer">Audio Visualizer
-                (Color)</span>
-            <label class="switch">
-                <input type="checkbox" id="visualizerActive">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
+    </div>
 
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.7.0 • <span data-i18n="ui_by">By Manzbot</span>
+        v0.8.0 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>

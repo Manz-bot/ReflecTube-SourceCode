@@ -718,3 +718,17 @@ div#description.ytd-watch-metadata:not(:has(#description-inline-expander[is-expa
 div#contentContainer #page-header-container {
     background: transparent !important;
 }
+
+/* IA */
+ytd-engagement-panel-section-list-renderer.style-scope.ytd-watch-flexy,
+ytd-engagement-panel-section-list-renderer.style-scope.ytd-watch-flexy>div,
+ytd-engagement-panel-section-list-renderer.style-scope.ytd-watch-flexy div#header {
+    background: transparent !important;
+}
+
+/* Headers */
+ytd-browse div#page-header-container,
+ytd-browse div#page-header,
+ytd-section-list-renderer div#header {
+    background: transparent !important;
+}

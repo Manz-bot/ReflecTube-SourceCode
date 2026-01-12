@@ -1,63 +1,63 @@
 {
   "extensionDesc": {
-    "message": "Para YouTube y YouTube Music, esta extensión reproduce la interfaz de YouTube en un lienzo (específicamente, el reproductor de video). Duplica o proyecta cualquier video de YouTube en tiempo real con una amplia configuración."
+    "message": "For Youtube & YouTube Music, this extension reflects the youtube interface in a canvas (most especifically the video player). Mirror or cast any YouTube video behind it in real time with extensive settings."
   },
   "extension_action": {
-    "message": "Reflejar video"
+    "message": "Mirror video"
   },
   "extension_err_connection": {
-    "message": "La página perdió conexión con la extensión, refresca la página o activa la extensión."
+    "message": "The page lost connection with the extension, please refresh the page or activate the extension."
   },
   "extension_on": {
-    "message": "ReflecTube ha sido activado"
+    "message": "ReflecTube has been activated"
   },
   "extension_off": {
-    "message": "ReflecTube ha sido desactivado"
+    "message": "ReflecTube has been disabled"
   },
   "menu_action": {
-    "message": "Abrir  configuración"
+    "message": "Open  configuration"
   },
   "settings_interval": {
-    "message": "Intervalo"
+    "message": "Interval"
   },
   "settings_quality": {
-    "message": "Calidad"
+    "message": "Quality"
   },
   "settings_blur": {
-    "message": "Difuminado"
+    "message": "Blur"
   },
   "settings_opacity": {
-    "message": "Opacidad"
+    "message": "Opacity"
   },
   "settings_visualizer": {
-    "message": "Visualizador"
+    "message": "Visualizer"
   },
   "settings_style": {
-    "message": "Estilo"
+    "message": "Style"
   },
   "settings_image": {
-    "message": "Cambiar imagen"
+    "message": "Change image"
   },
   "settings_text": {
-    "message": "Resaltar texto"
+    "message": "Highlight text"
   },
   "settings_filters": {
-    "message": "Filtros"
+    "message": "Filters"
   },
   "settings_pointer": {
-    "message": "Seguir puntero"
+    "message": "Follow pointer"
   },
   "settings_reset": {
-    "message": "Restablecer"
+    "message": "Restore"
   },
   "option_max": {
-    "message": "Sí - Máximo"
+    "message": "Yes - Maximum"
   },
   "option_average": {
-    "message": "Sí - Promedio"
+    "message": "Yes - Average"
   },
   "option_yes": {
-    "message": "Sí"
+    "message": "Yes"
   },
   "option_no": {
     "message": "No"
@@ -66,210 +66,261 @@
     "message": "Video"
   },
   "option_thumbnail": {
-    "message": "Miniatura"
+    "message": "Miniature"
   },
   "option_image": {
-    "message": "Imagen personalizada"
+    "message": "Custom image"
   },
   "option_file": {
-    "message": "Archivo"
+    "message": "Archive"
   },
   "option_link": {
-    "message": "Enlace"
+    "message": "Link"
   },
   "option_grayscale": {
-    "message": "Escala de grises"
+    "message": "Grayscale"
   },
   "option_rgb": {
-    "message": "RGB"
+    "message": "rgb"
   },
   "option_invert": {
-    "message": "Colores invertidos"
+    "message": "Inverted colors"
   },
   "option_saturate": {
-    "message": "Colores saturados"
+    "message": "saturated colors"
   },
   "option_sepia": {
     "message": "Sepia"
   },
   "option_pointer_inverted": {
-    "message": "Sí - Invertido"
+    "message": "Yes - Inverted"
   },
   "option_reset": {
-    "message": "¿Deseas restablecer la configuración al predeterminado de ReflecTube?"
+    "message": "Do you want to reset ReflecTube settings to default?"
   },
   "option_resetting": {
-    "message": "Se ha restablecido la configuración al predeterminado"
+    "message": "Settings have been reset to default"
   },
   "extension_opening_menu": {
-    "message": "El menú ha sido abierto"
+    "message": "The menu has been opened"
   },
   "extension_opened_menu": {
-    "message": "El menú ya está abierto."
+    "message": "The menu is already open"
   },
   "extension_err_menu": {
-    "message": "No se puede abrir el menú fuera de Youtube"
+    "message": "Can't open menu outside of Youtube"
   },
   "devInfo": {
-    "message": "por Manzanitabot123 & Comunidad"
+    "message": "by Manzbot & Community"
   },
   "devMessage": {
-    "message": "¡Muchas gracias {user} por usar ReflectTube! ♥"
+    "message": "Thank you so much {user} for using ReflectTube! "
   },
   "user": {
-    "message": "usuario"
+    "message": "user"
   },
   "coming_soon": {
-    "message": "Próximamente"
+    "message": "Coming soon"
   },
   "loadError": {
-    "message": "Ocurrió un error al cargar la extensión de Reflectube."
+    "message": "An error occurred while loading the Reflectube plugin."
   },
   "settings_filters_title": {
-    "message": "FILTROS"
+    "message": "FILTERS"
   },
   "settings_system_title": {
-    "message": "SISTEMA"
+    "message": "SYSTEM"
+  },
+  "settings_profiles_title": {
+    "message": "PROFILES"
+  },
+  "settings_effects_title": {
+    "message": "EFFECTS"
   },
   "settings_extension_switch": {
-    "message": "Extensión"
+    "message": "Extension"
   },
   "settings_saturation": {
-    "message": "Saturación"
+    "message": "Saturation"
   },
   "settings_brightness": {
-    "message": "Brillo"
+    "message": "Brightness"
   },
   "settings_contrast": {
-    "message": "Contraste"
+    "message": "Contrast"
   },
   "settings_sepia": {
     "message": "Sepia"
   },
   "settings_audio_reactivity": {
-    "message": "Reactividad de Audio"
+    "message": "Audio Reactivity"
   },
   "settings_audio_sensitivity": {
-    "message": "Sensibilidad de Audio"
+    "message": "Audio Sensitivity"
   },
   "settings_framerate": {
-    "message": "Tasa de Refresco (ms)"
+    "message": "Frame Rate (ms)"
   },
   "settings_smoothness": {
-    "message": "Suavizado"
+    "message": "Smoothness"
   },
   "settings_resolution": {
-    "message": "Resolución (Px)"
+    "message": "Resolution (Px)"
   },
   "settings_camera_shake": {
-    "message": "Temblor de Cámara (Mano)"
+    "message": "Camera Shake (Handheld)"
   },
   "settings_camera_intensity": {
-    "message": "Intensidad de Cámara"
+    "message": "Camera Intensity"
   },
   "settings_legacy_mode": {
-    "message": "Modo Legacy (2 Canvas)"
+    "message": "Legacy Mode (2 Canvas)"
   },
   "settings_pointer_follow": {
-    "message": "Seguir Puntero (Invertido)"
+    "message": "Pointer Follow (Inverted)"
   },
   "settings_visualizer_color": {
-    "message": "Visualizador de Audio (Color dinámico)"
+    "message": "Audio Visualizer (Dynamic color)"
   },
   "settings_ambient_mode": {
-    "message": "Modo Ambiente (PearDesktop)"
+    "message": "Ambient Mode (PearDesktop)"
   },
   "settings_ambient_size": {
-    "message": "Escala Ambiente (%)"
+    "message": "Ambient Scale (%)"
   },
   "tooltip_ambient_mode": {
-    "message": "Inyecta el reflejo dentro del reproductor. Mejorado para Shorts/Miniplayer. Reemplaza el modo por defecto."
+    "message": "Injects the reflection inside the player. Optimized for Shorts/Miniplayer. Replaces default mode."
   },
   "tooltip_ambient_size": {
-    "message": "Ajusta el tamaño del resplandor ambiental relativo al video."
+    "message": "Adjust the size of the ambient glow relative to the video."
   },
   "settings_reset_config": {
-    "message": "Restablecer Configuración"
+    "message": "Reset Configuration"
   },
   "ui_weak": {
-    "message": "Débil"
+    "message": "Weak"
   },
   "ui_medium": {
-    "message": "Medio"
+    "message": "Medium"
   },
   "ui_strong": {
-    "message": "Fuerte"
+    "message": "Strong"
   },
   "ui_by": {
-    "message": "Por Manzbot"
+    "message": "By Manzbot & Community"
   },
   "update_available_msg": {
-    "message": "¡Nueva versión {version} disponible!"
+    "message": "New version {version} available!"
   },
   "update_btn_text": {
-    "message": "Descargar actualización"
+    "message": "Download update"
   },
   "tooltip_master": {
-    "message": "Habilita o deshabilita la extensión globalmente."
+    "message": "Enable or disable the extension globally."
   },
   "tooltip_opacity": {
-    "message": "Ajusta la transparencia del reflejo."
+    "message": "Adjust the transparency of the reflection."
   },
   "tooltip_blur": {
-    "message": "Aplica un efecto de desenfoque al reflejo."
+    "message": "Apply a blur effect to the reflection."
   },
   "tooltip_saturation": {
-    "message": "Ajusta la intensidad del color."
+    "message": "Adjust the color intensity."
   },
   "tooltip_brightness": {
-    "message": "Ajusta el nivel de brillo."
+    "message": "Adjust the brightness level."
   },
   "tooltip_contrast": {
-    "message": "Ajusta el contraste entre áreas claras y oscuras."
+    "message": "Adjust the contrast between light and dark areas."
   },
   "tooltip_sepia": {
-    "message": "Aplica un filtro de tono sepia vintage."
+    "message": "Apply a vintage sepia tone filter."
   },
   "tooltip_audio": {
-    "message": "Habilita efectos visuales que reaccionan a la salida de audio."
+    "message": "Enable visual effects that react to audio output."
   },
   "tooltip_sensitivity": {
-    "message": "Ajusta qué tan sensibles son los visuales al volumen del audio."
+    "message": "Adjust how sensitive the visuals are to audio volume."
   },
   "tooltip_framerate": {
-    "message": "Establece la tasa de refresco del reflejo (menos ms = más fluido)."
+    "message": "Set the refresh rate of the reflection (lower ms = smoother)."
   },
   "tooltip_smoothness": {
-    "message": "Ajusta la suavidad de la interpolación de movimiento."
+    "message": "Adjust the smoothness of the movement interpolation."
   },
   "tooltip_resolution": {
-    "message": "Establece la resolución de renderizado del lienzo."
+    "message": "Set the rendering resolution of the canvas."
   },
   "tooltip_camerashake": {
-    "message": "Simula un efecto de movimiento de cámara en mano."
+    "message": "Simulate a handheld camera movement effect."
   },
   "tooltip_cameraintensity": {
-    "message": "Ajusta la intensidad del temblor de la cámara."
+    "message": "Adjust the intensity of the camera shake."
   },
   "tooltip_legacy": {
-    "message": "Usa el método de renderizado antiguo (puede ser más rápido en algunos dispositivos)."
+    "message": "Use the old rendering method (may be faster on some devices)."
   },
   "tooltip_pointer": {
-    "message": "El reflejo se mueve en dirección opuesta al ratón."
+    "message": "Reflection moves in the opposite direction of the mouse."
   },
   "tooltip_visualizer": {
-    "message": "Muestra un visualizador de color dinámico basado en frecuencias de audio."
+    "message": "Show a dynamic color visualizer based on audio frequencies."
   },
   "settings_invert": {
-    "message": "Invertir"
+    "message": "Invert"
   },
   "settings_hueloop": {
-    "message": "Animación de Bucle de Matiz"
+    "message": "Hue Loop Animation"
   },
   "tooltip_invert": {
-    "message": "Invierte los colores del reflejo."
+    "message": "Invert the colors of the reflection."
   },
   "tooltip_hueloop": {
-    "message": "Ciclo de colores automático y continuo."
+    "message": "Automatically cycle through colors continuously."
+  },
+  "profile_save": {
+    "message": "Save"
+  },
+  "profile_delete": {
+    "message": "Delete"
+  },
+  "profile_export": {
+    "message": "Export Profile"
+  },
+  "profile_import": {
+    "message": "Import Profile"
+  },
+  "profile_new_option": {
+    "message": "➕ Create New..."
+  },
+  "profile_modal_title": {
+    "message": "Name New Profile"
+  },
+  "profile_modal_placeholder": {
+    "message": "Profile Name"
+  },
+  "profile_modal_cancel": {
+    "message": "Cancel"
+  },
+  "profile_modal_create": {
+    "message": "Create"
+  },
+  "profile_alert_overwrite": {
+    "message": "Update profile \"{name}\" with current settings?"
+  },
+  "profile_alert_delete": {
+    "message": "Delete profile \"{name}\"?"
+  },
+  "profile_alert_copied": {
+    "message": "Profile \"{name}\" copied to clipboard!"
+  },
+  "profile_alert_imported": {
+    "message": "Profile \"{name}\" imported successfully!"
+  },
+  "settings_webgl": {
+    "message": "WebGL Renderer (GPU)"
+  },
+  "tooltip_webgl": {
+    "message": "Enable experimental GPU acceleration for liquid distortion effects."
   }
 }

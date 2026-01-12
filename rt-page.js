@@ -6,7 +6,6 @@ let config = {
     saturation: 100,
     brightness: 75,
     contrast: 100,
-    contrast: 100,
     sepia: 0,
     invert: 0,
     hueLoop: false,
@@ -17,7 +16,6 @@ let config = {
     framerate: 30,    // Time in ms between checks
     smoothness: 60,   // 0-100, controls the fade factor
     resolution: 100,   // Pixel width of the internal canvas
-    legacyMode: false, // Switch between Modern (One Canvas) and Legacy (Dual Canvas)
     pointerActive: false, // Inverted pointer follow
     visualizerActive: false, // Dynamic visualizer
     ambientMode: false, // Smart Ambient Mode
@@ -45,7 +43,6 @@ if (chrome.storage && chrome.storage.sync) {
 // Listen for updates
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'UPDATE_SETTINGS') {
-        const oldLegacy = config.legacyMode;
         const oldAmbient = config.ambientMode;
         config = { ...config, ...request.payload };
 
@@ -54,6 +51,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Handle Master Switch Toggle
         const container = document.getElementById('rt-container');
         if (container) {
+            // But basic visibility:
             container.style.display = config.masterSwitch ? 'flex' : 'none';
         }
 
@@ -64,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         VisualizerManager.updateState();
 
         // Handle Mode Switch or Re-init
-        if (config.legacyMode !== oldLegacy || config.ambientMode !== oldAmbient) {
+        if (config.ambientMode !== oldAmbient) {
             restartEngine();
         } else {
             // Live update for active engine if needed
@@ -118,8 +116,8 @@ function init() {
 function restartEngine() {
     // Teardown
     ModernEngine.stop();
-    LegacyEngine.stop();
     AmbientEngine.stop();
+    if (typeof WebGLEngine !== 'undefined') WebGLEngine.stop();
 
     // Clear Container (Global Projector)
     let container = document.getElementById('rt-container');
@@ -131,8 +129,8 @@ function restartEngine() {
     // Start appropriate engine
     if (config.ambientMode) {
         AmbientEngine.start();
-    } else if (config.legacyMode) {
-        LegacyEngine.start();
+    } else if (config.webglActive && typeof WebGLEngine !== 'undefined') {
+        WebGLEngine.init();
     } else {
         ModernEngine.start();
     }
@@ -240,95 +238,95 @@ const AudioManager = (() => {
 })();
 
 // ----------------------------------------------------------------------
-// VISUALIZER MANAGER (Dynamic Color)
+// VISUALIZER MANAGER (Canvas Logic)
 // ----------------------------------------------------------------------
 const VisualizerManager = (() => {
     let active = false;
-    let bars = [];
+    let canvas = null;
+    let ctx = null;
     let lastColorCheck = 0;
+    let currentColor = 'rgb(255, 255, 255)';
 
     function init() {
         updateState();
     }
 
     function create() {
-        if (document.getElementById('rt_visualizer')) return; // Check exists
+        if (document.getElementById('rt_visualizer_canvas')) return;
 
-        let viz = document.createElement("div");
-        viz.id = "rt_visualizer";
-        // Styling matches expected flex layout
-        viz.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; display: flex; align-items: flex-end; justify-content: center; opacity: 0.8; pointer-events: none; z-index: 2000;";
+        canvas = document.createElement("canvas");
+        canvas.id = "rt_visualizer_canvas";
+        canvas.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; opacity: 0.8; pointer-events: none; z-index: 2000;";
 
-        // Bars
-        const numBars = 64;
-        for (let i = 0; i < numBars; i++) {
-            let bar = document.createElement("div");
-            // Improved transitions for color and height/opacity
-            bar.style.cssText = "flex: 1; margin: 0 1px; background: white; transition: height 0.1s ease, background-color 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease; border-radius: 2px 2px 0 0;";
-            bar.style.height = "2px";
-            viz.appendChild(bar);
-            bars.push(bar);
-        }
+        // Logical resolution for crisp rendering
+        canvas.width = window.innerWidth;
+        canvas.height = 100;
 
-        document.body.appendChild(viz);
+        document.body.appendChild(canvas);
+        ctx = canvas.getContext('2d', { alpha: true });
 
-        if (!active) viz.style.display = 'none';
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (canvas) canvas.width = window.innerWidth;
+        });
+
+        if (!active) canvas.style.display = 'none';
         applyStyles();
     }
 
-
-
     function applyStyles() {
-        const v = document.getElementById('rt_visualizer');
-        if (v) {
-            // Ensure visibility matches config
-            v.style.display = (active && config.masterSwitch) ? 'flex' : 'none';
+        if (canvas) {
+            canvas.style.display = (active && config.masterSwitch) ? 'block' : 'none';
         }
     }
 
     function updateState() {
         active = config.visualizerActive;
-        const v = document.getElementById('rt_visualizer');
+        const v = document.getElementById('rt_visualizer_canvas');
         if (active && !v) create();
         else applyStyles();
     }
 
     // Called by Engines
     function updateBars(dataArray, bufferLength) {
-        if (!active || !config.masterSwitch) return;
+        if (!active || !config.masterSwitch || !ctx || !canvas) return;
 
+        const width = canvas.width;
+        const height = canvas.height;
+        const barWidth = (width / 64);
         const step = Math.floor(bufferLength / 64);
-        let totalVol = 0;
 
-        // Calculate average volume to detect silence
-        for (let i = 0; i < 64; i++) {
-            totalVol += dataArray[i * step] || 0;
-        }
-        const avgVol = totalVol / 64;
-        const isSilent = avgVol < 5; // Threshold for silence
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = currentColor;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = currentColor;
+
+        let x = 0;
+
+        // Calculate silence for optimization?
+        // Not strictly needed for canvas, unlilke DOM where we want to hide elems.
 
         for (let i = 0; i < 64; i++) {
-            if (bars[i]) {
-                if (isSilent) {
-                    // Flatten and disappear
-                    bars[i].style.height = "0px";
-                    bars[i].style.opacity = "0";
-                } else {
-                    const val = dataArray[i * step] || 0;
-                    const h = (val / 255) * 50; // Max 50% height
-                    bars[i].style.height = Math.max(2, h) + "%";
-                    bars[i].style.opacity = "1";
-                }
+            const val = dataArray[i * step] || 0;
+            // Scale val (0-255) to height (0-100)
+            const barHeight = (val / 255) * height * 0.8;
+
+            if (barHeight > 2) {
+                // Draw rounded top bar? Simple rect for performance first.
+                // ctx.roundRect (new API) or just rect
+                ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
             }
+            x += barWidth;
         }
     }
 
-    function updateColor(ctx, width, height) {
+    function updateColor(ctxSource, width, height) {
         if (!active || !config.masterSwitch) return;
         const now = Date.now();
         if (now - lastColorCheck < 200) return; // Throttle 200ms
         lastColorCheck = now;
 
+        // Sample center 50% of the screen
         const sx = Math.floor(width * 0.25);
         const sy = Math.floor(height * 0.25);
         const sw = Math.floor(width * 0.5);
@@ -337,33 +335,52 @@ const VisualizerManager = (() => {
         if (sw < 1 || sh < 1) return;
 
         try {
-            const data = ctx.getImageData(sx, sy, sw, sh).data;
-            let r = 0, g = 0, b = 0, count = 0;
-            const step = 4 * 10; // Skip pixels
+            const data = ctxSource.getImageData(sx, sy, sw, sh).data;
+            let totalScore = 0;
+            let totalR = 0;
+            let totalG = 0;
+            let totalB = 0;
+
+            // Optimization: Skip pixels (step 20 = examine ~5% of pixels, sufficient for ambient)
+            const step = 4 * 20;
 
             for (let i = 0; i < data.length; i += step) {
-                r += data[i];
-                g += data[i + 1];
-                b += data[i + 2];
-                count++;
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                const range = max - min; // Proxy for saturation/chroma
+
+                // Score = Chroma^2 * Brightness
+                // Squaring chroma heavily favors colorful pixels over gray ones.
+                const score = (range * range) * max;
+
+                if (score > 1000) { // Threshold to ignore dark/muddy pixels
+                    totalR += r * score;
+                    totalG += g * score;
+                    totalB += b * score;
+                    totalScore += score;
+                }
             }
 
-            if (count > 0) {
-                r = Math.floor(r / count);
-                g = Math.floor(g / count);
-                b = Math.floor(b / count);
+            if (totalScore > 0) {
+                // Weighted Average
+                let finalR = Math.floor(totalR / totalScore);
+                let finalG = Math.floor(totalG / totalScore);
+                let finalB = Math.floor(totalB / totalScore);
 
-                // Brighten
-                const factor = 1.3;
-                r = Math.min(255, r * factor);
-                g = Math.min(255, g * factor);
-                b = Math.min(255, b * factor);
+                // Final Boost to ensure pop
+                const boost = 1.2;
+                finalR = Math.min(255, finalR * boost);
+                finalG = Math.min(255, finalG * boost);
+                finalB = Math.min(255, finalB * boost);
 
-                const color = `rgb(${r},${g},${b})`;
-                bars.forEach(bar => {
-                    bar.style.background = color;
-                    bar.style.boxShadow = `0 0 10px ${color}`;
-                });
+                currentColor = `rgb(${finalR},${finalG},${finalB})`;
+            } else {
+                // Fallback if scene is completely black/gray
+                currentColor = 'rgb(200, 200, 200)';
             }
         } catch (e) { }
     }
@@ -404,6 +421,271 @@ const EffectManager = (() => {
 })();
 
 // ----------------------------------------------------------------------
+// VIDEO MANAGER (Optimization)
+// ----------------------------------------------------------------------
+const VideoManager = (() => {
+    let videos = new Set();
+    let observer = null;
+
+    function init() {
+        updateList();
+        if (!observer) {
+            observer = new MutationObserver((mutations) => {
+                // Optimization: Debounce or just check type?
+                updateList();
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    }
+
+    function updateList() {
+        const nodelist = document.querySelectorAll('video');
+        videos = new Set(nodelist);
+    }
+
+    function findActive() {
+        // Efficient search through cached Set
+        for (let v of videos) {
+            // Check src to avoid empty video placeholders
+            if (!v.paused && v.style.display !== 'none' && v.readyState > 2 && v.src && v.src !== '') {
+                // Prioritize Shorts/Main
+                if (v.closest('ytd-reel-video-renderer')) return v;
+                if (!v.closest('ytd-miniplayer')) return v; // Main player preference
+                return v; // Fallback
+            }
+        }
+        return null; // No valid active video found
+    }
+
+    return { init, findActive };
+})();
+
+
+// ----------------------------------------------------------------------
+// WEBGL ENGINE (GPU)
+// ----------------------------------------------------------------------
+const WebGLEngine = (() => {
+    let canvas, gl, program;
+    let texture;
+    let animationId;
+    let startTime = 0;
+
+    // SHADERS (Liquid Distortion + Chromatic Aberration)
+    const vsSource = `
+        attribute vec2 a_position;
+        attribute vec2 a_texCoord;
+        varying vec2 v_texCoord;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    `;
+
+    const fsSource = `
+        precision mediump float;
+        uniform sampler2D u_image;
+        uniform float u_time;
+        uniform float u_bass; // Audio reactivity (0.0 to 1.0)
+        varying vec2 v_texCoord;
+        
+        void main() {
+            vec2 uv = v_texCoord;
+            
+            // Liquid Distortion
+            // Uses bass to amplify the wave effect
+            float wave = sin(uv.y * 10.0 + u_time * 2.0) * 0.02 * u_bass;
+            uv.x += wave;
+            
+            // Simple Chromatic Aberration
+            float shift = 0.01 * u_bass;
+            float r = texture2D(u_image, uv + vec2(shift, 0.0)).r;
+            float g = texture2D(u_image, uv).g;
+            float b = texture2D(u_image, uv - vec2(shift, 0.0)).b;
+            
+            // Alpha handling (using green channel as alpha proxy if needed, but video is opaque)
+            gl_FragColor = vec4(r, g, b, 1.0);
+        }
+    `;
+
+    function init() {
+        if (document.getElementById('rt-webgl-container')) return;
+
+        const container = document.createElement('div');
+        container.id = 'rt-webgl-container';
+        // Reuse camhand class if shake is enabled
+        if (config.cameraShake) container.classList.add('camhand');
+
+        // Insert into DOM
+        const app = document.querySelector('ytd-app') || document.body;
+        app.insertAdjacentElement('afterbegin', container);
+
+        canvas = document.createElement('canvas');
+        // Initial size, will be updated in loop
+        canvas.width = 480;
+        canvas.height = 270;
+        container.appendChild(canvas);
+
+        gl = canvas.getContext('webgl', { alpha: false });
+        if (!gl) {
+            console.error("Reflectube: WebGL not supported");
+            return;
+        }
+
+        // Compile Shaders
+        const vert = compileShader(gl, gl.VERTEX_SHADER, vsSource);
+        const frag = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        program = createProgram(gl, vert, frag);
+
+        // Define Quad
+        // Positions (Clip Space -1 to 1)
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1, -1,
+            1, -1,
+            -1, 1,
+            -1, 1,
+            1, -1,
+            1, 1,
+        ]), gl.STATIC_DRAW);
+
+        // UVs (Texture Space 0 to 1)
+        // Flip Y if needed? WebGL 0,0 is bottom-left, images top-left usually.
+        // Let's try standard UVs first.
+        const texCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            0, 1,
+            1, 1,
+            0, 0,
+            0, 0,
+            1, 1,
+            1, 0,
+        ]), gl.STATIC_DRAW);
+
+        // Link Attributes
+        const positionLocation = gl.getAttribLocation(program, "a_position");
+        const texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+        gl.enableVertexAttribArray(positionLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        gl.enableVertexAttribArray(texCoordLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // Create Texture
+        texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        // Parameters for non-power-of-2 textures
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        startTime = Date.now();
+        start();
+    }
+
+    function start() {
+        if (!animationId) loop();
+    }
+
+    function stop() {
+        if (animationId) cancelAnimationFrame(animationId);
+        animationId = null;
+        const c = document.getElementById('rt-webgl-container');
+        if (c) c.remove();
+        canvas = null;
+        gl = null;
+    }
+
+    function loop() {
+        animationId = requestAnimationFrame(loop);
+
+        if (!config.masterSwitch || !config.webglActive) return;
+
+        const video = VideoManager.findActive();
+        if (!video || video.paused || video.readyState < 2) return;
+
+        // Resize Canvas if configuration changed or video aspect ratio differs
+        // Logic similar to ModernEngine
+        let targetW = config.resolution;
+        if (targetW < 10) targetW = 10;
+        let targetH = Math.floor((video.videoHeight / video.videoWidth) * targetW);
+
+        // Safety check for invalid dimensions
+        if (targetW < 1) targetW = 1;
+        if (targetH < 1) targetH = 1;
+
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+            canvas.width = targetW;
+            canvas.height = targetH;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        // --- AUDIO ANALYSIS ---
+        // (Copied from ModernEngine logic)
+        let bass = 0.0;
+        if (config.audioEnabled) {
+            AudioManager.connect(video); // Ensure connected
+            const analyser = AudioManager.getAnalyser();
+            if (analyser) {
+                const data = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(data);
+                // Average first few bins for Bass
+                let sum = 0;
+                // Use first 5 bins
+                for (let i = 0; i < 5; i++) sum += data[i];
+                bass = (sum / 5) / 255.0; // Normalized 0-1
+                bass *= (config.sensitivity / 50); // Apply sensitivity
+            }
+        }
+
+        gl.useProgram(program);
+
+        // Uniforms
+        const uTime = gl.getUniformLocation(program, "u_time");
+        const uBass = gl.getUniformLocation(program, "u_bass");
+
+        const time = (Date.now() - startTime) * 0.001;
+        gl.uniform1f(uTime, time);
+        gl.uniform1f(uBass, bass);
+
+        // Texture Update
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+
+        // Draw
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function compileShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
+
+    function createProgram(gl, vs, fs) {
+        const p = gl.createProgram();
+        gl.attachShader(p, vs);
+        gl.attachShader(p, fs);
+        gl.linkProgram(p);
+        return p;
+    }
+
+    return { init, stop };
+})();
+
+
+// ----------------------------------------------------------------------
 // MODERN (Single Canvas) - Global
 // ----------------------------------------------------------------------
 const ModernEngine = (() => {
@@ -422,6 +704,7 @@ const ModernEngine = (() => {
     let lastTime = 0;
 
     function start() {
+        VideoManager.init(); // Ensure observer is running
         createProjector();
         applyGlobalStyles();
         loopId = requestAnimationFrame(loop);
@@ -453,20 +736,6 @@ const ModernEngine = (() => {
         canvasState.ctx = c.getContext('2d', { willReadFrequently: true, alpha: false });
 
         if (config.visualizerActive) VisualizerManager.create();
-    }
-
-    function findActiveVideo() {
-        const videos = Array.from(document.querySelectorAll('video'));
-        const playingVideos = videos.filter(v => !v.paused && v.style.display !== 'none' && v.src && v.readyState > 2);
-        if (playingVideos.length === 0) return null;
-
-        const shortsVideo = playingVideos.find(v => v.closest('ytd-reel-video-renderer'));
-        if (shortsVideo) return shortsVideo;
-
-        const mainVideo = playingVideos.find(v => !v.closest('ytd-miniplayer'));
-        if (mainVideo) return mainVideo;
-
-        return playingVideos[0];
     }
 
     function analyzeAudio() {
@@ -502,7 +771,9 @@ const ModernEngine = (() => {
         if (timestamp - lastTime < config.framerate) return;
         lastTime = timestamp;
 
-        const bestVideo = findActiveVideo();
+        // Use Optimized Video Manager
+        const bestVideo = VideoManager.findActive();
+
         if (bestVideo) {
             if (state.activeVideo !== bestVideo) {
                 state.activeVideo = bestVideo;
@@ -512,7 +783,11 @@ const ModernEngine = (() => {
             }
         }
 
-        if (!state.activeVideo || state.activeVideo.paused || state.activeVideo.ended) return;
+        const container = document.getElementById('rt-container');
+        // Check if we have a valid source to display
+        const hasSource = bestVideo && bestVideo.src && bestVideo.src !== '';
+
+        if (!hasSource || !state.activeVideo || state.activeVideo.paused || state.activeVideo.ended) return;
 
         analyzeAudio();
 
@@ -546,7 +821,11 @@ const ModernEngine = (() => {
         ctx.globalAlpha = 1;
         if (canvasState.lastImageData) ctx.putImageData(canvasState.lastImageData, 0, 0);
         ctx.globalAlpha = effectiveAlpha;
-        ctx.drawImage(state.activeVideo, 0, 0, targetW, targetH);
+        try {
+            ctx.drawImage(state.activeVideo, 0, 0, targetW, targetH);
+        } catch (e) {
+            // video might be not ready or tainted
+        }
         canvasState.lastImageData = ctx.getImageData(0, 0, targetW, targetH);
 
         VisualizerManager.updateColor(ctx, targetW, targetH);
@@ -555,28 +834,6 @@ const ModernEngine = (() => {
     return { start, stop };
 })();
 
-
-// ----------------------------------------------------------------------
-// LEGACY (OLD - Dual Canvas)
-// ----------------------------------------------------------------------
-const LegacyEngine = (() => {
-    let active = false;
-    let canvasState = { canvas0: null, canvas1: null };
-    let loopId = null;
-
-    function start() {
-        active = true;
-        ModernEngine.start();
-    }
-
-    function stop() {
-        active = false;
-        if (loopId) cancelAnimationFrame(loopId);
-        ModernEngine.stop();
-    }
-
-    return { start, stop };
-})();
 
 
 // ----------------------------------------------------------------------
@@ -765,7 +1022,13 @@ const AmbientEngine = (() => {
         if (!loopId) return;
         loopId = requestAnimationFrame(loop);
 
-        if (!config.masterSwitch || !config.ambientMode) return;
+        if (!config.masterSwitch || !config.ambientMode) {
+            if (canvas) canvas.style.display = 'none';
+            return;
+        }
+
+        if (canvas && canvas.style.display === 'none') canvas.style.display = 'block';
+
         if (timestamp - lastTime < config.framerate) return;
         lastTime = timestamp;
 

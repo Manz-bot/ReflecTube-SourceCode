@@ -111,7 +111,7 @@
     "message": "No se puede abrir el menú fuera de Youtube"
   },
   "devInfo": {
-    "message": "por Manzanitabot123 & Comunidad"
+    "message": "por Manzbot & Comunidad"
   },
   "devMessage": {
     "message": "¡Muchas gracias {user} por usar ReflectTube! ♥"
@@ -130,6 +130,12 @@
   },
   "settings_system_title": {
     "message": "SISTEMA"
+  },
+  "settings_profiles_title": {
+    "message": "PERFILES"
+  },
+  "settings_effects_title": {
+    "message": "EFECTOS"
   },
   "settings_extension_switch": {
     "message": "Extensión"
@@ -201,7 +207,7 @@
     "message": "Fuerte"
   },
   "ui_by": {
-    "message": "Por Manzbot"
+    "message": "Por Manzbot & Comunidad"
   },
   "update_available_msg": {
     "message": "¡Nueva versión {version} disponible!"
@@ -271,5 +277,50 @@
   },
   "tooltip_hueloop": {
     "message": "Ciclo de colores automático y continuo."
+  },
+  "profile_save": {
+    "message": "Guardar"
+  },
+  "profile_delete": {
+    "message": "Borrar"
+  },
+  "profile_export": {
+    "message": "Exportar Perfil"
+  },
+  "profile_import": {
+    "message": "Importar Perfil"
+  },
+  "profile_new_option": {
+    "message": "➕ Crear Nuevo..."
+  },
+  "profile_modal_title": {
+    "message": "Nombrar Nuevo Perfil"
+  },
+  "profile_modal_placeholder": {
+    "message": "Nombre del Perfil"
+  },
+  "profile_modal_cancel": {
+    "message": "Cancelar"
+  },
+  "profile_modal_create": {
+    "message": "Crear"
+  },
+  "profile_alert_overwrite": {
+    "message": "¿Actualizar perfil \"{name}\" con la configuración actual?"
+  },
+  "profile_alert_delete": {
+    "message": "¿Eliminar perfil \"{name}\"?"
+  },
+  "profile_alert_copied": {
+    "message": "¡Perfil \"{name}\" copiado al portapapeles!"
+  },
+  "profile_alert_imported": {
+    "message": "¡Perfil \"{name}\" importado con éxito!"
+  },
+  "settings_webgl": {
+    "message": "Renderizador WebGL (GPU)"
+  },
+  "tooltip_webgl": {
+    "message": "Habilita la aceleración por GPU para efectos de distorsión líquida (Experimental)."
   }
 }

@@ -1,11 +1,9 @@
-// Default config
 const DEFAULT_CONFIG = {
     masterSwitch: true,
     opacity: 100,
     blur: 20,
     saturation: 100,
     brightness: 75,
-    contrast: 100,
     contrast: 100,
     sepia: 0,
     invert: 0,
@@ -17,11 +15,10 @@ const DEFAULT_CONFIG = {
     framerate: 30,
     smoothness: 60,
     resolution: 100,
-    legacyMode: false,
-    pointerActive: false,
-    legacyMode: false,
     pointerActive: false,
     visualizerActive: false,
+    // WebGL
+    webglActive: false,
     // Ambient Mode Defaults
     ambientMode: false,
     ambientScale: 110
@@ -48,10 +45,10 @@ const els = {
     audioEnabled: document.getElementById('audioEnabled'),
     cameraShake: document.getElementById('cameraShake'),
     cameraIntensity: document.getElementById('cameraIntensity'),
-    legacyMode: document.getElementById('legacyMode'),
     pointerActive: document.getElementById('pointerActive'),
     visualizerActive: document.getElementById('visualizerActive'),
     visualizerActive: document.getElementById('visualizerActive'),
+    webglActive: document.getElementById('webglActive'),
     ambientMode: document.getElementById('ambientMode'),
     ambientScale: document.getElementById('ambientScale'),
     ambientSettings: document.getElementById('ambient-settings'),
@@ -124,7 +121,6 @@ function updateUI() {
     els.audioEnabled.checked = config.audioEnabled;
     els.cameraShake.checked = config.cameraShake;
     els.cameraIntensity.value = config.cameraIntensity;
-    if (els.legacyMode) els.legacyMode.checked = config.legacyMode;
     if (els.pointerActive) els.pointerActive.checked = config.pointerActive;
     if (els.visualizerActive) els.visualizerActive.checked = config.visualizerActive;
     if (els.ambientMode) els.ambientMode.checked = config.ambientMode;
@@ -184,7 +180,7 @@ function updateConfigFromUI() {
     config.cameraIntensity = parseInt(els.cameraIntensity.value);
     config.audioEnabled = els.audioEnabled.checked;
     config.cameraShake = els.cameraShake.checked;
-    if (els.legacyMode) config.legacyMode = els.legacyMode.checked;
+    config.cameraShake = els.cameraShake.checked;
     if (els.pointerActive) config.pointerActive = els.pointerActive.checked;
     if (els.visualizerActive) config.visualizerActive = els.visualizerActive.checked;
     if (els.ambientMode) config.ambientMode = els.ambientMode.checked;
@@ -264,7 +260,6 @@ const featureMap = {
     'masterSwitch': 'settings_extension_switch',
     'audioEnabled': 'settings_audio_reactivity',
     'cameraShake': 'settings_camera_shake',
-    'legacyMode': 'settings_legacy_mode',
     'pointerActive': 'settings_pointer_follow',
     'visualizerActive': 'settings_visualizer_color',
     'ambientMode': 'settings_ambient_mode',
@@ -333,7 +328,7 @@ const MANIFEST_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH
     try {
         const localManifest = chrome.runtime.getManifest();
         const localVersion = localManifest.version;
-
+        console.log(MANIFEST_URL);
         const response = await fetch(MANIFEST_URL);
         if (response.ok) {
             const remoteManifest = await response.json();
@@ -437,6 +432,275 @@ Object.keys(els).forEach(key => {
         });
     }
 });
+
+// ----------------------------------------------------------------------
+// PROFILE MANAGER
+// ----------------------------------------------------------------------
+const ProfileManager = (() => {
+    const els = {
+        select: document.getElementById('profile-select'),
+        btnSave: document.getElementById('profile-save-btn'),
+        btnDelete: document.getElementById('profile-delete-btn'),
+        btnExport: document.getElementById('profile-export-btn'),
+        btnImport: document.getElementById('profile-import-btn'),
+
+        // Modal
+        modal: document.getElementById('new-profile-modal'),
+        inputNewName: document.getElementById('new-profile-input'),
+        btnCancelNew: document.getElementById('cancel-new-profile'),
+        btnConfirmNew: document.getElementById('confirm-new-profile')
+    };
+
+    let profiles = { "Default": { ...DEFAULT_CONFIG } };
+    let previousSelectValue = "Default";
+    let lastProfileName = "Default";
+
+    function init() {
+        if (!els.select) return;
+
+        // Load Profiles and Last Selected
+        chrome.storage.sync.get(['rt_profiles', 'rt_last_profile'], (res) => {
+            if (res.rt_profiles) {
+                profiles = res.rt_profiles;
+            }
+            if (res.rt_last_profile && profiles[res.rt_last_profile]) {
+                lastProfileName = res.rt_last_profile;
+                previousSelectValue = res.rt_last_profile;
+            }
+            renderSelect();
+
+            // If the persisted profile is not Default, enforce loading its settings to UI
+            // But usually, the page loads with saved config. We just need UI sync.
+            // If we want to ensure config matches profile:
+            if (lastProfileName !== "Default") {
+                loadProfile(lastProfileName);
+            }
+        });
+
+        // -----------------------
+        // SELECT HANDLER
+        // -----------------------
+        els.select.addEventListener('change', (e) => {
+            if (els.select.value === '_NEW_') {
+                openNewProfileModal();
+            } else {
+                previousSelectValue = els.select.value;
+                loadProfile(els.select.value);
+            }
+        });
+
+        // -----------------------
+        // MODAL HANDLERS
+        // -----------------------
+        if (els.btnCancelNew) {
+            els.btnCancelNew.addEventListener('click', () => {
+                closeNewProfileModal();
+                els.select.value = previousSelectValue; // Revert select
+            });
+        }
+
+        if (els.btnConfirmNew) {
+            els.btnConfirmNew.addEventListener('click', () => {
+                const name = els.inputNewName.value.trim();
+                if (name && name !== "Default" && name !== "_NEW_") {
+                    saveProfile(name);
+                    closeNewProfileModal();
+                } else {
+                    alert("Invalid name.");
+                }
+            });
+        }
+
+        // Allow Enter key in modal
+        if (els.inputNewName) {
+            els.inputNewName.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') els.btnConfirmNew.click();
+                if (e.key === 'Escape') els.btnCancelNew.click();
+            });
+        }
+
+        // -----------------------
+        // BUTTON ACTIONS
+        // -----------------------
+        els.btnSave.addEventListener('click', () => {
+            const current = els.select.value;
+
+            // If on Default, FORCE "Save As" (Modal)
+            if (current === 'Default') {
+                openNewProfileModal();
+                return;
+            }
+
+            // If creating new via select
+            if (current === '_NEW_') return;
+
+            // Otherwise, confirm overwrite
+            const msg = chrome.i18n.getMessage("profile_alert_overwrite", { name: current }).replace("{name}", current);
+            if (confirm(msg)) {
+                saveProfile(current);
+            }
+        });
+
+        els.btnDelete.addEventListener('click', () => {
+            const name = els.select.value;
+            if (name === "Default" || name === "_NEW_") {
+                alert("Cannot delete Default profile.");
+                return;
+            }
+            const msg = chrome.i18n.getMessage("profile_alert_delete", { name: name }).replace("{name}", name);
+            if (confirm(msg)) {
+                deleteProfile(name);
+            }
+        });
+
+        // -----------------------
+        // EXPORT / IMPORT
+        // -----------------------
+        if (els.btnExport) {
+            els.btnExport.addEventListener('click', () => {
+                const name = els.select.value;
+                if (name === '_NEW_') return;
+
+                const profileData = profiles[name];
+                if (!profileData) return;
+
+                const json = JSON.stringify(profileData);
+                const b64 = btoa(json);
+                const exportStr = `RT_PROFILE::${name}::${b64}`;
+
+                navigator.clipboard.writeText(exportStr).then(() => {
+                    const msg = chrome.i18n.getMessage("profile_alert_copied", { name: name }).replace("{name}", name);
+                    alert(msg);
+                });
+            });
+        }
+
+        if (els.btnImport) {
+            els.btnImport.addEventListener('click', () => {
+                const raw = prompt("Paste Profile String (RT_PROFILE::...):");
+                if (!raw) return;
+
+                try {
+                    const parts = raw.split('::');
+                    if (parts[0] !== 'RT_PROFILE' || parts.length < 3) throw new Error("Invalid format");
+
+                    const name = parts[1];
+                    const b64 = parts[2];
+                    const json = atob(b64);
+                    const data = JSON.parse(json);
+
+                    let finalName = name;
+                    if (profiles[name]) {
+                        if (!confirm(`Profile "${name}" exists. Overwrite?`)) {
+                            finalName = prompt("New name for imported profile:", `${name}_Import`);
+                            if (!finalName) return;
+                        }
+                    }
+
+                    saveProfile(finalName, data);
+                    alert(`Profile "${finalName}" imported successfully!`);
+
+                    els.select.value = finalName;
+                    previousSelectValue = finalName;
+                    loadProfile(finalName);
+                } catch (e) {
+                    alert("Error importing profile: " + e.message);
+                }
+            });
+        }
+    }
+
+    function openNewProfileModal() {
+        els.inputNewName.value = "My Profile " + (Object.keys(profiles).length);
+        els.modal.style.display = 'flex';
+        els.inputNewName.focus();
+        els.inputNewName.select();
+    }
+
+    function closeNewProfileModal() {
+        els.modal.style.display = 'none';
+    }
+
+    function renderSelect() {
+        els.select.innerHTML = '';
+
+        // Add Default
+        const defOpt = document.createElement('option');
+        defOpt.value = "Default";
+        defOpt.textContent = "Default";
+        els.select.appendChild(defOpt);
+
+        // Add User Profiles
+        Object.keys(profiles).forEach(name => {
+            if (name === "Default") return;
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            els.select.appendChild(opt);
+        });
+
+        // Add "New Profile" Option
+        const newOpt = document.createElement('option');
+        newOpt.value = "_NEW_";
+        newOpt.textContent = chrome.i18n.getMessage("profile_new_option");
+        els.select.appendChild(newOpt);
+
+        // Restore value or Last Selected
+        // If we have a 'previousSelectValue' tracked from init check, use it
+        if (profiles[previousSelectValue]) {
+            els.select.value = previousSelectValue;
+        } else {
+            els.select.value = "Default";
+        }
+    }
+
+    function loadProfile(name) {
+        if (profiles[name]) {
+            config = { ...DEFAULT_CONFIG, ...profiles[name] };
+            updateUI();
+
+            // Save current config AND update last selected profile
+            saveAndNotify();
+            chrome.storage.sync.set({ 'rt_last_profile': name });
+
+            previousSelectValue = name;
+        }
+    }
+
+    function saveProfile(name, specificData = null) {
+        const dataToSave = specificData || { ...config };
+        profiles[name] = dataToSave;
+
+        // Save to storage (profiles AND last selected)
+        chrome.storage.sync.set({
+            'rt_profiles': profiles,
+            'rt_last_profile': name
+        }, () => {
+            previousSelectValue = name;
+            renderSelect();
+            els.select.value = name;
+            if (typeof speakChange === 'function') speakChange("Profile Saved", true);
+        });
+    }
+
+    function deleteProfile(name) {
+        delete profiles[name];
+        // Reset to Default
+        chrome.storage.sync.set({
+            rt_profiles: profiles,
+            rt_last_profile: "Default"
+        }, () => {
+            previousSelectValue = "Default";
+            renderSelect();
+            loadProfile("Default");
+        });
+    }
+
+    return { init };
+})();
+
+// Init Profiles
+ProfileManager.init();
 
 const applyStylesToIframe = () => {
     console.log("Aplicando estilos al iframe");
