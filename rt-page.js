@@ -486,6 +486,86 @@ const VideoManager = (() => {
 })();
 
 
+
+// ----------------------------------------------------------------------
+// THUMBNAIL MANAGER (Fallback for Audio Mode)
+// ----------------------------------------------------------------------
+const ThumbnailManager = (() => {
+    let currentId = null;
+    let currentImage = null;
+    let isLoading = false;
+
+    function getVideoId() {
+        // Try URL param first (most reliable for YT/YTM)
+        const urlParams = new URLSearchParams(window.location.search);
+        const v = urlParams.get('v');
+        if (v) return v;
+        return null;
+    }
+
+    function getThumbnail(id) {
+        if (!id) return null;
+
+        if (currentId === id) {
+            return currentImage; // Return image only if loaded
+        }
+
+        // New ID, fetch
+        currentId = id;
+        currentImage = null; // Reset
+        isLoading = true;
+
+        loadBestThumbnail(id).then(img => {
+            if (currentId === id) {
+                currentImage = img;
+                isLoading = false;
+            }
+        });
+
+        return null; // Not ready yet
+    }
+
+    async function loadBestThumbnail(id) {
+        // Try qualities in order
+        const qualities = [
+            `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`,
+            `https://i.ytimg.com/vi/${id}/hq720.jpg`,
+            `https://i.ytimg.com/vi/${id}/sddefault.jpg`,
+            `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+        ];
+
+        for (let src of qualities) {
+            try {
+                const img = await loadImage(src);
+                return img;
+            } catch (e) {
+                // Try next
+                continue;
+            }
+        }
+        return null;
+    }
+
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // Crucial for canvas
+            img.onload = () => {
+                if (img.width <= 120) {
+                    reject('Too small');
+                } else {
+                    resolve(img);
+                }
+            };
+            img.onerror = reject;
+            img.src = src;
+        });
+    }
+
+    return { getThumbnail, getVideoId };
+})();
+
+
 // ----------------------------------------------------------------------
 // WEBGL ENGINE (GPU)
 // ----------------------------------------------------------------------
@@ -809,20 +889,45 @@ const ModernEngine = (() => {
         // Use Optimized Video Manager
         const bestVideo = VideoManager.findActive();
 
-        if (bestVideo) {
+        // --- CHECK STATE ---
+        let renderSource = null;
+        let isVideo = false;
+
+        if (bestVideo && !bestVideo.paused && bestVideo.readyState > 2 && bestVideo.src && bestVideo.videoWidth > 10) {
+            renderSource = bestVideo;
+            isVideo = true;
+
             if (state.activeVideo !== bestVideo) {
                 state.activeVideo = bestVideo;
                 canvasState.lastImageData = null;
-                // Connect Audio Shared
                 if (config.audioEnabled || config.visualizerActive) AudioManager.connect(state.activeVideo);
+            }
+        } else {
+            // Fallback to Thumbnail
+            const vId = ThumbnailManager.getVideoId();
+            if (vId) {
+                const thumb = ThumbnailManager.getThumbnail(vId);
+                if (thumb) {
+                    renderSource = thumb;
+                    isVideo = false;
+                }
+            }
+
+            // Critical: Connect to any playing media for audio when in thumbnail mode
+            if (config.audioEnabled || config.visualizerActive) {
+                const media = document.querySelectorAll('video, audio');
+                for (let m of media) {
+                    if (!m.paused && m.readyState > 2) {
+                        AudioManager.connect(m);
+                        break;
+                    }
+                }
             }
         }
 
         const container = document.getElementById('rt-container');
-        // Check if we have a valid source to display
-        const hasSource = bestVideo && bestVideo.src && bestVideo.src !== '';
-
-        if (!hasSource || !state.activeVideo || state.activeVideo.paused || state.activeVideo.ended) return;
+        // If nothing to render, return
+        if (!renderSource) return;
 
         analyzeAudio();
 
@@ -830,12 +935,19 @@ const ModernEngine = (() => {
         const ctx = canvasState.ctx;
         if (!cvs || !ctx) return;
 
-        const videoW = state.activeVideo.videoWidth;
-        const videoH = state.activeVideo.videoHeight;
-        if (videoW === 0 || videoH === 0) return;
+        let sourceW, sourceH;
+        if (isVideo) {
+            sourceW = renderSource.videoWidth;
+            sourceH = renderSource.videoHeight;
+        } else {
+            sourceW = renderSource.width;
+            sourceH = renderSource.height;
+        }
+
+        if (sourceW === 0 || sourceH === 0) return;
 
         let targetW = config.resolution;
-        let targetH = Math.floor((videoH / videoW) * targetW);
+        let targetH = Math.floor((sourceH / sourceW) * targetW);
         if (targetW < 1) targetW = 1;
         if (targetH < 1) targetH = 1;
 
@@ -846,7 +958,11 @@ const ModernEngine = (() => {
         }
 
         let scale = 110;
-        if (config.audioEnabled) scale += (state.decibels / 4);
+        if (config.audioEnabled) {
+            // Amplify the reaction for static thumbnails
+            const reaction = isVideo ? (state.decibels / 4) : (state.decibels / 2);
+            scale += reaction;
+        }
         cvs.style.minWidth = scale + "%";
         cvs.style.minHeight = scale + "%";
 
@@ -857,7 +973,7 @@ const ModernEngine = (() => {
         if (canvasState.lastImageData) ctx.putImageData(canvasState.lastImageData, 0, 0);
         ctx.globalAlpha = effectiveAlpha;
         try {
-            ctx.drawImage(state.activeVideo, 0, 0, targetW, targetH);
+            ctx.drawImage(renderSource, 0, 0, targetW, targetH);
         } catch (e) {
             // video might be not ready or tainted
         }
@@ -1067,21 +1183,67 @@ const AmbientEngine = (() => {
         if (timestamp - lastTime < config.framerate) return;
         lastTime = timestamp;
 
-        if (!activeVideo || activeVideo.paused || !canvas || !ctx) {
-            checkInjection();
+        // --- CHECK STATE ---
+        let renderSource = null; // Video or Image
+        let isVideo = false;
+
+        // 1. Try Active Video (MUST have dimensions to be a real video)
+        if (activeVideo && !activeVideo.paused && activeVideo.readyState > 2 && activeVideo.videoWidth > 10) {
+            renderSource = activeVideo;
+            isVideo = true;
+        } else {
+            // 2. Try Thumbnail (Fallback for Paused/Audio Mode)
+            const vId = ThumbnailManager.getVideoId();
+            if (vId) {
+                const thumb = ThumbnailManager.getThumbnail(vId);
+                if (thumb) {
+                    renderSource = thumb;
+                    isVideo = false;
+                }
+            }
+
+            // Critical: If we are in Audio Mode (Thumbnail), ensure Audio is connected!
+            // activeVideo might be null, paused, or have no video track, but music is playing.
+            if (config.audioEnabled || config.visualizerActive) {
+                const media = document.querySelectorAll('video, audio');
+                for (let m of media) {
+                    if (!m.paused && m.readyState > 2) {
+                        AudioManager.connect(m);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If no source at all, ensure we check injection (maybe video changed) and return
+        if (!renderSource) {
+            if (!activeVideo || activeVideo.paused) checkInjection();
+            return;
+        }
+
+        // Ensure canvas exists
+        if (!canvas || !ctx) {
+            if (activeVideo) injectCanvas(activeVideo); // Try re-injecting on known video
             return;
         }
 
         analyzeAudio();
 
         // Draw Logic
-        // Use natural dimensions
-        const videoW = activeVideo.videoWidth;
-        const videoH = activeVideo.videoHeight;
-        if (!videoW || !videoH) return;
+        let sourceW, sourceH;
+
+        if (isVideo) {
+            sourceW = renderSource.videoWidth;
+            sourceH = renderSource.videoHeight;
+        } else {
+            sourceW = renderSource.width;
+            sourceH = renderSource.height;
+        }
+
+        if (!sourceW || !sourceH) return;
 
         let targetW = config.resolution;
-        let targetH = Math.floor((videoH / videoW) * targetW);
+        let targetH = Math.floor((sourceH / sourceW) * targetW);
 
         if (canvas.width !== targetW || canvas.height !== targetH) {
             canvas.width = targetW;
@@ -1089,22 +1251,14 @@ const AmbientEngine = (() => {
             lastImageData = null;
         }
 
-        // Live Apply Style props (Scale, Opacity etc)
-        // Optimization: Apply only if changed? For now, assigning to style is okay.
-        // Update opacity/scale from config + audio
-
         let currentScale = config.ambientScale / 100;
         if (config.audioEnabled && state.decibels > 0) {
-            currentScale += (state.decibels / 500); // Slight bump
+            // Amplify the reaction for static thumbnails to make it more visible
+            const reaction = isVideo ? (state.decibels / 500) : (state.decibels / 200);
+            currentScale += reaction;
         }
 
-        // Update transforms/filters
-        // Note: Filters set in inject, can update here if needed.
-        // canvas.style.filter = ... (expensive to set every frame? browser should optimize if string same)
-        // We set it on updateConfig and inject.
-        // But for audio reactivity on SCALE, we need to update transform.
         canvas.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
-
 
         // Trail / Interpolation
         const alpha = 1 - (config.smoothness / 105);
@@ -1114,7 +1268,9 @@ const AmbientEngine = (() => {
         if (lastImageData) ctx.putImageData(lastImageData, 0, 0);
 
         ctx.globalAlpha = effectiveAlpha;
-        ctx.drawImage(activeVideo, 0, 0, targetW, targetH);
+        try {
+            ctx.drawImage(renderSource, 0, 0, targetW, targetH);
+        } catch (e) { }
 
         lastImageData = ctx.getImageData(0, 0, targetW, targetH);
 
