@@ -164,6 +164,9 @@ ytd-playlist-panel-video-renderer[selected][use-color-palette]:hover:not(.draggi
 #tabs-inner-container {
     background-color: transparent !important;
 }
+yt-page-header-renderer.pageHeaderRendererHost.ytd-tabbed-page-header {
+    backdrop-filter: blur(10px) !important;
+}
 
 ytd-c4-tabbed-header-renderer[darker-dark-theme] #channel-container.ytd-c4-tabbed-header-renderer,
 ytd-c4-tabbed-header-renderer[darker-dark-theme] #tabs-container.ytd-c4-tabbed-header-renderer {
@@ -750,4 +753,15 @@ ytd-button-renderer.style-scope.ytd-feed-filter-chip-bar-renderer {
 #chips-wrapper div#left-arrow-button {
     background: #ff000000 !important;
     backdrop-filter: blur(10px);
+}
+
+/*shorts comments*/
+ytd-page-manager .navigation-container.style-scope.ytd-shorts {
+    background: transparent !important;
+}
+
+
+ytd-engagement-panel-section-list-renderer div#content {
+    backdrop-filter: blur(10px);
+    background: transparent;
 }
