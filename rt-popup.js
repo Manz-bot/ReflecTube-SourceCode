@@ -47,7 +47,6 @@ const els = {
     cameraIntensity: document.getElementById('cameraIntensity'),
     pointerActive: document.getElementById('pointerActive'),
     visualizerActive: document.getElementById('visualizerActive'),
-    visualizerActive: document.getElementById('visualizerActive'),
     webglActive: document.getElementById('webglActive'),
     ambientMode: document.getElementById('ambientMode'),
     ambientScale: document.getElementById('ambientScale'),
@@ -163,28 +162,27 @@ function updateLabels() {
 }
 
 function updateConfigFromUI() {
-    config.masterSwitch = els.masterSwitch.checked;
-    config.opacity = parseInt(els.opacity.value);
-    config.blur = parseInt(els.blur.value);
-    config.saturation = parseInt(els.saturation.value);
-    config.brightness = parseInt(els.brightness.value);
-    config.contrast = parseInt(els.contrast.value);
-    config.contrast = parseInt(els.contrast.value);
-    config.sepia = parseInt(els.sepia.value);
-    config.invert = parseInt(els.invert.value);
-    config.hueLoop = els.hueLoop.checked;
-    config.sensitivity = parseInt(els.sensitivity.value);
-    config.framerate = parseInt(els.framerate.value);
-    config.smoothness = parseInt(els.smoothness.value);
-    config.resolution = parseInt(els.resolution.value);
-    config.cameraIntensity = parseInt(els.cameraIntensity.value);
-    config.audioEnabled = els.audioEnabled.checked;
-    config.cameraShake = els.cameraShake.checked;
-    config.cameraShake = els.cameraShake.checked;
+    if (els.masterSwitch) config.masterSwitch = els.masterSwitch.checked;
+    if (els.opacity) config.opacity = parseInt(els.opacity.value);
+    if (els.blur) config.blur = parseInt(els.blur.value);
+    if (els.saturation) config.saturation = parseInt(els.saturation.value);
+    if (els.brightness) config.brightness = parseInt(els.brightness.value);
+    if (els.contrast) config.contrast = parseInt(els.contrast.value);
+    if (els.sepia) config.sepia = parseInt(els.sepia.value);
+    if (els.invert) config.invert = parseInt(els.invert.value);
+    if (els.hueLoop) config.hueLoop = els.hueLoop.checked;
+    if (els.sensitivity) config.sensitivity = parseInt(els.sensitivity.value);
+    if (els.framerate) config.framerate = parseInt(els.framerate.value);
+    if (els.smoothness) config.smoothness = parseInt(els.smoothness.value);
+    if (els.resolution) config.resolution = parseInt(els.resolution.value);
+    if (els.cameraIntensity) config.cameraIntensity = parseInt(els.cameraIntensity.value);
+    if (els.audioEnabled) config.audioEnabled = els.audioEnabled.checked;
+    if (els.cameraShake) config.cameraShake = els.cameraShake.checked;
     if (els.pointerActive) config.pointerActive = els.pointerActive.checked;
     if (els.visualizerActive) config.visualizerActive = els.visualizerActive.checked;
     if (els.ambientMode) config.ambientMode = els.ambientMode.checked;
     if (els.ambientScale) config.ambientScale = parseInt(els.ambientScale.value);
+    if (els.webglActive) config.webglActive = els.webglActive.checked;
 
     // Call updateUI to handle visibility logic (or just duplicate it here for responsiveness)
     // It's cleaner to duplicate just the display parts or call a shared "updateVisibility" function.
@@ -558,54 +556,54 @@ const ProfileManager = (() => {
         // -----------------------
         if (els.btnExport) {
             els.btnExport.addEventListener('click', () => {
-                const name = els.select.value;
-                if (name === '_NEW_') return;
+                // Export ALL data (current config + profiles)
+                chrome.storage.sync.get(['rt_config', 'rt_profiles', 'rt_last_profile'], (items) => {
+                    const data = JSON.stringify(items, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
 
-                const profileData = profiles[name];
-                if (!profileData) return;
-
-                const json = JSON.stringify(profileData);
-                const b64 = btoa(json);
-                const exportStr = `RT_PROFILE::${name}::${b64}`;
-
-                navigator.clipboard.writeText(exportStr).then(() => {
-                    const msg = chrome.i18n.getMessage("profile_alert_copied", { name: name }).replace("{name}", name);
-                    alert(msg);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reflectube_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
                 });
             });
         }
 
         if (els.btnImport) {
-            els.btnImport.addEventListener('click', () => {
-                const raw = prompt("Paste Profile String (RT_PROFILE::...):");
-                if (!raw) return;
+            // Setup hidden input listener
+            const fileInput = document.getElementById('import-file-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', async (e) => {
+                    if (!e.target.files.length) return;
+                    const file = e.target.files[0];
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
 
-                try {
-                    const parts = raw.split('::');
-                    if (parts[0] !== 'RT_PROFILE' || parts.length < 3) throw new Error("Invalid format");
+                        // Validate/Safety check?
+                        // We expect keys: rt_config, rt_profiles, rt_last_profile
+                        // Or just merge whatever is there.
 
-                    const name = parts[1];
-                    const b64 = parts[2];
-                    const json = atob(b64);
-                    const data = JSON.parse(json);
-
-                    let finalName = name;
-                    if (profiles[name]) {
-                        if (!confirm(`Profile "${name}" exists. Overwrite?`)) {
-                            finalName = prompt("New name for imported profile:", `${name}_Import`);
-                            if (!finalName) return;
+                        if (confirm("Esto sobreescribirá tu configuración actual. ¿Continuar?")) {
+                            chrome.storage.sync.set(data, () => {
+                                alert("Configuración importada exitosamente.");
+                                location.reload();
+                            });
                         }
+                    } catch (err) {
+                        alert("Error al importar: " + err.message);
                     }
+                    // Reset input
+                    fileInput.value = '';
+                });
+            }
 
-                    saveProfile(finalName, data);
-                    alert(`Profile "${finalName}" imported successfully!`);
-
-                    els.select.value = finalName;
-                    previousSelectValue = finalName;
-                    loadProfile(finalName);
-                } catch (e) {
-                    alert("Error importing profile: " + e.message);
-                }
+            els.btnImport.addEventListener('click', () => {
+                if (fileInput) fileInput.click();
             });
         }
     }
@@ -701,28 +699,3 @@ const ProfileManager = (() => {
 
 // Init Profiles
 ProfileManager.init();
-
-const applyStylesToIframe = () => {
-    console.log("Aplicando estilos al iframe");
-    const iframe = document.getElementById('chatframe');
-    if (iframe && iframe.contentDocument) {
-        const style = document.createElement('style');
-        style.textContent = `
-      yt-live-chat-renderer.style-scope.yt-live-chat-app {
-    background: red !important;
-}
-
-yt-live-chat-app {
-    background: red !important;
-}
-
-    `;
-        iframe.contentDocument.head.appendChild(style);
-    }
-};
-
-// Ejecutar cuando el iframe cargue
-const chatFrame = document.getElementById('chat-container');
-if (chatFrame) {
-    chatFrame.addEventListener('load', applyStylesToIframe);
-}

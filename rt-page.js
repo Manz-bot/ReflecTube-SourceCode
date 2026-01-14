@@ -61,6 +61,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Visualizer Update
         VisualizerManager.updateState();
 
+        // Ensure Audio is Ready if newly enabled
+        if (config.audioEnabled || config.visualizerActive) {
+            AudioManager.resume();
+        }
+
         // Handle Mode Switch or Re-init
         if (config.ambientMode !== oldAmbient) {
             restartEngine();
@@ -194,18 +199,38 @@ const AudioManager = (() => {
                 analyser.fftSize = 512;
                 analyser.connect(context.destination);
                 isInitialized = true;
+
+                // Auto-resume on user interaction
+                const resumeHandler = () => {
+                    if (context && context.state === 'suspended') {
+                        context.resume().then(() => {
+                            // Remove listeners once resumed? 
+                            // Keep them just in case browser suspends it again (unlikely but possible)
+                        });
+                    }
+                };
+
+                document.addEventListener('click', resumeHandler);
+                document.addEventListener('keydown', resumeHandler);
+
             } catch (e) {
                 console.error("Reflectube Audio Init Error:", e);
             }
         }
     }
 
-    function connect(videoElement) {
-        if (!videoElement) return;
-        init();
+    function resume() {
         if (context && context.state === 'suspended') {
             context.resume();
         }
+    }
+
+    function connect(videoElement) {
+        if (!videoElement) return;
+        init();
+
+        // Try to resume immediately
+        resume();
 
         if (sources.has(videoElement)) return; // Already connected
 
@@ -234,7 +259,7 @@ const AudioManager = (() => {
         }
     }
 
-    return { init, connect, getAnalyser, getAudioData };
+    return { init, connect, resume, getAnalyser, getAudioData };
 })();
 
 // ----------------------------------------------------------------------
@@ -256,7 +281,7 @@ const VisualizerManager = (() => {
 
         canvas = document.createElement("canvas");
         canvas.id = "rt_visualizer_canvas";
-        canvas.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; opacity: 0.8; pointer-events: none; z-index: 2000;";
+        canvas.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; opacity: 0.8; pointer-events: none; z-index: 99;";
 
         // Logical resolution for crisp rendering
         canvas.width = window.innerWidth;
@@ -520,9 +545,11 @@ const WebGLEngine = (() => {
         app.insertAdjacentElement('afterbegin', container);
 
         canvas = document.createElement('canvas');
-        // Initial size, will be updated in loop
-        canvas.width = 480;
-        canvas.height = 270;
+        // Initial size based on config
+        canvas.width = config.resolution || 480;
+        canvas.height = Math.floor(canvas.width * (9 / 16)); // Default 16:9
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
         container.appendChild(canvas);
 
         gl = canvas.getContext('webgl', { alpha: false });
@@ -655,7 +682,13 @@ const WebGLEngine = (() => {
 
         // Texture Update
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+        try {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+        } catch (e) {
+            // Video might be tainted or not ready
+            console.warn("WebGL Texture Error:", e);
+            return;
+        }
 
         // Draw
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -730,6 +763,8 @@ const ModernEngine = (() => {
         let c = document.createElement('canvas');
         c.setAttribute("oncontextmenu", "return false;");
         c.style.imageRendering = 'auto';
+        c.style.width = '100%';
+        c.style.height = '100%';
         container.appendChild(c);
 
         canvasState.canvas = c;

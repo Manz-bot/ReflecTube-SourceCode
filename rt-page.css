@@ -732,3 +732,22 @@ ytd-browse div#page-header,
 ytd-section-list-renderer div#header {
     background: transparent !important;
 }
+
+#dismissible .button-container.style-scope.ytd-rich-shelf-renderer {
+    background: transparent !important;
+}
+
+button.yt-spec-button-shape-next.yt-spec-button-shape-next--outline.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--size-m.yt-spec-button-shape-next--icon-trailing.yt-spec-button-shape-next--enable-backdrop-filter-experiment {
+    backdrop-filter: blur(10px)
+}
+
+ytd-post-renderer.style-scope.ytd-rich-item-renderer,
+ytd-button-renderer.style-scope.ytd-feed-filter-chip-bar-renderer {
+    background: transparent !important;
+}
+
+#chips-wrapper div#right-arrow-button,
+#chips-wrapper div#left-arrow-button {
+    background: #ff000000 !important;
+    backdrop-filter: blur(10px);
+}

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -487,7 +488,7 @@
                 <span data-i18n="settings_resolution" data-tooltip="tooltip_resolution">Resolution (Px)</span>
                 <span id="val-resolution">80px</span>
             </div>
-            <input type="range" id="resolution" min="10" max="480" value="80">
+            <input type="range" id="resolution" min="10" max="1920" value="80">
         </div>
 
 
@@ -502,6 +503,7 @@
             style="background: #9b59b6; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
             data-i18n="profile_import">Import Profile</button>
     </div>
+    <input type="file" id="import-file-input" accept=".json" style="display: none;">
     <button id="reset-btn" data-i18n="settings_reset_config">Reset Configuration</button>
 
     <!-- New Profile Modal Overlay -->
@@ -526,7 +528,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.8.0 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.8.2 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>
