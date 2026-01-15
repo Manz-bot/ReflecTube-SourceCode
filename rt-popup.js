@@ -32,7 +32,8 @@
     }
     // Try Content Script Scraping from Google tabs
     try {
-        const tabs = await chrome.tabs.query({ url: "https://*.google.com/*" });
+        const tabs = await chrome.tabs.query({ url: ["https://*.youtube.com/*", "https://*.google.com/*"] });
+
 
         for (const tab of tabs) {
             try {
@@ -40,31 +41,37 @@
                     target: { tabId: tab.id },
                     func: () => {
                         const selectors = [
-                            'img.gb_q.gbii', // Gmail
-                            'a[aria-label*="Google Account"] img', // New Google UI
+                            "img.yt-img-shadow",
+                            'img[alt="Profile"]', // Gmail
                             'img[data-src*="googleusercontent"]', // Search
                             '.gb_ua.gbii', // Alternate Gmail
+                            'gb_Q.gbii',
                             'img[alt*="Profile"]', // Generic
                             'img[src*="googleusercontent.com"]' // Any Google user content
                         ];
 
                         for (const selector of selectors) {
                             const img = document.querySelector(selector);
-                            if (img && img.src && img.src.includes('googleusercontent')) {
+                            if (img && img.src && (img.src.includes('yt3.ggpht.com') || img.src.includes('googleusercontent'))) {
                                 const parent = img.closest('a[aria-label]');
                                 let name = null;
                                 if (parent) {
                                     const label = parent.getAttribute('aria-label');
                                     // Extract name: "Google Account: John Doe" -> "John Doe"
                                     const match = label.match(/:\s*(.+?)(?:\s*\(|$)/);
-                                    if (match) name = match[1].trim();
+                                    if (document.querySelectorAll('#display-name')[0]) {
+                                        name = document.querySelectorAll('#display-name')[0].textContent
+                                    } else if (match) {
+                                        name = match[1].trim()
+                                    }
                                 }
+                                console.log(name)
+                                console.log(img.src)
                                 return {
                                     picture: img.src.replace(/=s\d+-/, '=s128-'),
                                     name: name
                                 };
                             }
-                            console.log(img)
                         }
                         return null;
                     }
