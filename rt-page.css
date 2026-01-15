@@ -1,3 +1,19 @@
+/* =========================================
+   SVG FILTER CONTAINER
+   ========================================= */
+
+/* SVG Filter Definitions - Hidden Container */
+#vq-svg-filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* =========================================
+   ROOT VARIABLES
+   ========================================= */
+
 :root {
     --rt_blur: 0px;
     --rt_contrast: 100%;
@@ -163,9 +179,6 @@ ytd-playlist-panel-video-renderer[selected][use-color-palette]:hover:not(.draggi
 #channel-header,
 #tabs-inner-container {
     background-color: transparent !important;
-}
-yt-page-header-renderer.pageHeaderRendererHost.ytd-tabbed-page-header {
-    backdrop-filter: blur(10px) !important;
 }
 
 ytd-c4-tabbed-header-renderer[darker-dark-theme] #channel-container.ytd-c4-tabbed-header-renderer,
@@ -764,4 +777,9 @@ ytd-page-manager .navigation-container.style-scope.ytd-shorts {
 ytd-engagement-panel-section-list-renderer div#content {
     backdrop-filter: blur(10px);
     background: transparent;
+}
+
+/* Listbox */
+div#i1[role="listbox"] {
+    background-color: color-mix(in srgb, var(--yt-spec-base-background), transparent 50%) !important;
 }

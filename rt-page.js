@@ -9,6 +9,9 @@ let config = {
     sepia: 0,
     invert: 0,
     hueLoop: false,
+    sharpness: 0,
+    highlights: 100,
+    shadows: 100,
     sensitivity: 50,
     audioEnabled: true,
     cameraShake: false,
@@ -18,6 +21,7 @@ let config = {
     resolution: 100,   // Pixel width of the internal canvas
     pointerActive: false, // Inverted pointer follow
     visualizerActive: false, // Dynamic visualizer
+    visualizerType: 'bars', // Visualizer style: bars, soundwave, ocean
     ambientMode: false, // Smart Ambient Mode
     ambientScale: 110 // Scale %
 };
@@ -99,6 +103,11 @@ function applyGlobalStyles() {
     root.style.setProperty('--rt_sepia', (config.sepia || 0) + '%');
     root.style.setProperty('--rt_invert', (config.invert || 0) + '%');
 
+    // New filter variables
+    root.style.setProperty('--rt_sharpness', (config.sharpness || 0));
+    root.style.setProperty('--rt_highlights', (config.highlights || 100) + '%');
+    root.style.setProperty('--rt_shadows', (config.shadows || 100) + '%');
+
     if (!config.hueLoop) {
         root.style.setProperty('--rt_hue-rotate', '0deg');
     }
@@ -107,15 +116,117 @@ function applyGlobalStyles() {
     const factor = config.cameraIntensity / 50;
     root.style.setProperty('--fuerza', factor.toFixed(2));
 
+    // Apply SVG filters to container based on sharpness/highlights/shadows
+    if (container) {
+        updateContainerFilters(container);
+    }
+
     // Effect Update
     EffectManager.updateState();
 }
 
+function updateContainerFilters(container) {
+    // Build filter string with SVG filter references when applicable
+    let filters = [];
+
+    // Base CSS filters
+    filters.push(`blur(var(--rt_blur))`);
+    filters.push(`contrast(var(--rt_contrast))`);
+    filters.push(`grayscale(var(--rt_grayscale))`);
+    filters.push(`hue-rotate(var(--rt_hue-rotate))`);
+    filters.push(`invert(var(--rt_invert))`);
+    filters.push(`opacity(var(--rt_opacity))`);
+    filters.push(`saturate(var(--rt_saturate))`);
+    filters.push(`sepia(var(--rt_sepia))`);
+    filters.push(`brightness(var(--rt_brightness))`);
+
+    // Add sharpen if sharpness > 0
+    if (config.sharpness > 0) {
+        filters.push(`url(#sharpen-${Math.round(config.sharpness)})`);
+    }
+
+    // Add color adjustment if highlights or shadows differ from 100
+    if (config.highlights !== 100 || config.shadows !== 100) {
+        updateColorAdjustFilter(); // Update the filter values dynamically
+        filters.push(`url(#color-adjust)`);
+    }
+
+    container.style.filter = filters.join(' ');
+}
+
 function init() {
     applyGlobalStyles();
+    injectVideoQualityFilters(); // Inject SVG filters for video enhancement
     PointerManager.init();
     VisualizerManager.init();
     restartEngine();
+}
+
+// ----------------------------------------------------------------------
+// VIDEO QUALITY SVG FILTERS
+// ----------------------------------------------------------------------
+function injectVideoQualityFilters() {
+    if (document.getElementById('vq-svg-filters')) return; // Already injected
+
+    // Generate sharpness filters for different intensity levels (0-100 in steps of 10)
+    let sharpenFilters = '';
+    for (let i = 10; i <= 100; i += 10) {
+        // kernelMatrix intensity scales with sharpness value
+        const intensity = 0.1 + (i / 100) * 0.9; // 0.1 to 1.0
+        const center = 1 + (intensity * 3); // 1 to 4
+        const edge = -intensity; // 0 to -1
+        sharpenFilters += `
+            <filter id="sharpen-${i}">
+                <feConvolveMatrix order="3" preserveAlpha="true"
+                    kernelMatrix="0 ${edge.toFixed(2)} 0
+                                 ${edge.toFixed(2)} ${center.toFixed(2)} ${edge.toFixed(2)}
+                                  0 ${edge.toFixed(2)} 0"/>
+            </filter>`;
+    }
+
+    const svgContainer = document.createElement('div');
+    svgContainer.id = 'vq-svg-filters';
+    svgContainer.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
+            <defs>
+                ${sharpenFilters}
+                
+                <!-- Color Adjustment Filter: Dynamic Highlights/Shadows -->
+                <filter id="color-adjust">
+                    <feComponentTransfer>
+                        <feFuncR type="gamma" amplitude="1" exponent="1" offset="0"/>
+                        <feFuncG type="gamma" amplitude="1" exponent="1" offset="0"/>
+                        <feFuncB type="gamma" amplitude="1" exponent="1" offset="0"/>
+                    </feComponentTransfer>
+                </filter>
+            </defs>
+        </svg>
+    `;
+    document.body.insertAdjacentElement('afterbegin', svgContainer);
+}
+
+// Update the color-adjust filter dynamically based on highlights/shadows
+function updateColorAdjustFilter() {
+    const filter = document.getElementById('color-adjust');
+    if (!filter) return;
+
+    // Convert 50-150 range to amplitude/exponent adjustments
+    // highlights > 100 = brighter highlights, shadows > 100 = brighter shadows
+    const highlightsVal = (config.highlights || 100) / 100; // 0.5 to 1.5
+    const shadowsVal = (config.shadows || 100) / 100;
+
+    // Gamma exponent: < 1 brightens shadows, > 1 darkens shadows
+    // Amplitude affects overall brightness
+    const exponent = 1 / highlightsVal; // Inverse for highlights control
+    const amplitude = shadowsVal;
+
+    filter.innerHTML = `
+        <feComponentTransfer>
+            <feFuncR type="gamma" amplitude="${amplitude.toFixed(3)}" exponent="${exponent.toFixed(3)}" offset="0"/>
+            <feFuncG type="gamma" amplitude="${amplitude.toFixed(3)}" exponent="${exponent.toFixed(3)}" offset="0"/>
+            <feFuncB type="gamma" amplitude="${amplitude.toFixed(3)}" exponent="${exponent.toFixed(3)}" offset="0"/>
+        </feComponentTransfer>
+    `;
 }
 
 function restartEngine() {
@@ -270,7 +381,17 @@ const VisualizerManager = (() => {
     let canvas = null;
     let ctx = null;
     let lastColorCheck = 0;
-    let currentColor = 'rgb(255, 255, 255)';
+
+    // Smooth color transition
+    let targetColor = { r: 255, g: 255, b: 255 };
+    let currentColorRGB = { r: 255, g: 255, b: 255 };
+    const colorLerpSpeed = 0.05; // Slower = smoother transitions
+
+    // For Ocean wave effect
+    let waveOffset = 0;
+
+    // For Bubbles effect
+    let bubbles = [];
 
     function init() {
         updateState();
@@ -281,11 +402,11 @@ const VisualizerManager = (() => {
 
         canvas = document.createElement("canvas");
         canvas.id = "rt_visualizer_canvas";
-        canvas.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; opacity: 0.8; pointer-events: none; z-index: 99;";
+        canvas.style.cssText = "position: fixed; bottom: 0; left: 0; width: 100%; height: 120px; opacity: 0.85; pointer-events: none; z-index: 99;";
 
         // Logical resolution for crisp rendering
         canvas.width = window.innerWidth;
-        canvas.height = 100;
+        canvas.height = 120;
 
         document.body.appendChild(canvas);
         ctx = canvas.getContext('2d', { alpha: true });
@@ -312,43 +433,279 @@ const VisualizerManager = (() => {
         else applyStyles();
     }
 
-    // Called by Engines
+    // Smooth color interpolation
+    function lerpColor() {
+        currentColorRGB.r += (targetColor.r - currentColorRGB.r) * colorLerpSpeed;
+        currentColorRGB.g += (targetColor.g - currentColorRGB.g) * colorLerpSpeed;
+        currentColorRGB.b += (targetColor.b - currentColorRGB.b) * colorLerpSpeed;
+    }
+
+    function getCurrentColor() {
+        return `rgb(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)})`;
+    }
+
+    // Called by Engines - Main render dispatcher
     function updateBars(dataArray, bufferLength) {
         if (!active || !config.masterSwitch || !ctx || !canvas) return;
 
+        // Smooth color transition each frame
+        lerpColor();
+
+        const type = config.visualizerType || 'bars';
+
+        switch (type) {
+            case 'soundwave':
+                renderSoundwave(dataArray, bufferLength);
+                break;
+            case 'ocean':
+                renderOcean(dataArray, bufferLength);
+                break;
+            case 'bubbles':
+                renderBubbles(dataArray, bufferLength);
+                break;
+            case 'bars':
+            default:
+                renderBars(dataArray, bufferLength);
+                break;
+        }
+    }
+
+    // ========== BARS VISUALIZER ==========
+    function renderBars(dataArray, bufferLength) {
         const width = canvas.width;
         const height = canvas.height;
-        const barWidth = (width / 64);
-        const step = Math.floor(bufferLength / 64);
+        const barCount = 64;
+        const barWidth = width / barCount;
+        const step = Math.floor(bufferLength / barCount);
 
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = currentColor;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = currentColor;
+
+        const color = getCurrentColor();
+        ctx.fillStyle = color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = color;
 
         let x = 0;
-
-        // Calculate silence for optimization?
-        // Not strictly needed for canvas, unlilke DOM where we want to hide elems.
-
-        for (let i = 0; i < 64; i++) {
+        for (let i = 0; i < barCount; i++) {
             const val = dataArray[i * step] || 0;
-            // Scale val (0-255) to height (0-100)
-            const barHeight = (val / 255) * height * 0.8;
+            const barHeight = (val / 255) * height * 0.85;
 
             if (barHeight > 2) {
-                // Draw rounded top bar? Simple rect for performance first.
-                // ctx.roundRect (new API) or just rect
-                ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
+                // Gradient bar from bottom to top
+                const gradient = ctx.createLinearGradient(x, height, x, height - barHeight);
+                gradient.addColorStop(0, color);
+                gradient.addColorStop(1, `rgba(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)},0.3)`);
+                ctx.fillStyle = gradient;
+
+                // Rounded bars
+                const radius = Math.min(barWidth / 4, 3);
+                ctx.beginPath();
+                ctx.roundRect(x + 1, height - barHeight, barWidth - 3, barHeight, [radius, radius, 0, 0]);
+                ctx.fill();
             }
             x += barWidth;
+        }
+    }
+
+    // ========== SOUNDWAVE VISUALIZER ==========
+    function renderSoundwave(dataArray, bufferLength) {
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerY = height / 2;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const color = getCurrentColor();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = color;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Main wave
+        ctx.beginPath();
+        const sliceWidth = width / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            const val = dataArray[i] / 255;
+            const y = centerY + (val - 0.12) * height * 0.8;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            x += sliceWidth;
+        }
+        if (dataArray.every(val => val === 0)) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0)";
+        }
+        ctx.stroke();
+        // Mirror wave (reflected, more transparent)
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            const val = dataArray[i] / 255;
+            const y = centerY - (val - 0.82) * height * 0.6;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            x += sliceWidth;
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 0.3;
+    }
+
+    // ========== OCEAN WAVE VISUALIZER ==========
+    function renderOcean(dataArray, bufferLength) {
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const color = getCurrentColor();
+
+        // Calculate average amplitude for wave intensity
+        let avgAmplitude = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            avgAmplitude += dataArray[i];
+        }
+        avgAmplitude = (avgAmplitude / bufferLength) / 255;
+
+        // Animate wave offset - faster when louder
+        waveOffset += 0.02 + avgAmplitude * 0.08;
+
+        // Dynamic base Y position - waves stay at bottom when quiet, rise when loud
+        const baseY = height * (0.7 + (1 - avgAmplitude) * 0.25); // 70% to 95% from top
+
+        // Draw multiple layered waves
+        for (let layer = 0; layer < 3; layer++) {
+            const layerAlpha = (0.4 + avgAmplitude * 0.3) - layer * 0.1;
+            // Amplitude scales dramatically with audio
+            const layerAmplitude = (5 + avgAmplitude * 35) * (1 - layer * 0.25);
+            const layerFrequency = 0.006 + layer * 0.002;
+            const layerOffset = waveOffset * (1 + layer * 0.4);
+            const layerY = baseY + layer * 8;
+
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+
+            for (let x = 0; x <= width; x += 2) {
+                // Combine multiple sine waves for organic look
+                const y = layerY +
+                    Math.sin(x * layerFrequency + layerOffset) * layerAmplitude +
+                    Math.sin(x * layerFrequency * 2.5 + layerOffset * 1.3) * (layerAmplitude * 0.5) +
+                    Math.sin(x * layerFrequency * 0.7 + layerOffset * 0.6) * (layerAmplitude * 0.3);
+                ctx.lineTo(x, y);
+            }
+
+            ctx.lineTo(width, height);
+            ctx.closePath();
+
+            // Gradient fill
+            const gradient = ctx.createLinearGradient(0, layerY - layerAmplitude, 0, height);
+            gradient.addColorStop(0, `rgba(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)},${layerAlpha})`);
+            gradient.addColorStop(1, `rgba(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)},0.05)`);
+
+            ctx.fillStyle = gradient;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = color;
+            ctx.fill();
+        }
+    }
+
+    // ========== BUBBLES VISUALIZER ==========
+    function renderBubbles(dataArray, bufferLength) {
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const color = getCurrentColor();
+
+        // Calculate average amplitude
+        let avgAmplitude = 0;
+        for (let i = 0; i < bufferLength; i++) {
+            avgAmplitude += dataArray[i];
+        }
+        avgAmplitude = (avgAmplitude / bufferLength) / 255;
+
+        // Spawn new bubbles based on audio intensity
+        const spawnRate = Math.floor(avgAmplitude * 5) + 1; // 1-6 bubbles per frame
+        for (let i = 0; i < spawnRate; i++) {
+            if (bubbles.length < 100 && Math.random() < avgAmplitude + 0.1) {
+                bubbles.push({
+                    x: Math.random() * width,
+                    y: height + 20,
+                    baseSize: 3 + Math.random() * 12,
+                    speed: 0.5 + Math.random() * 2 + avgAmplitude * 2,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.02 + Math.random() * 0.03,
+                    opacity: 0.6 + Math.random() * 0.4
+                });
+            }
+        }
+
+        // Update and draw bubbles
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = color;
+
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+            const b = bubbles[i];
+
+            // Move upward
+            b.y -= b.speed;
+            b.wobble += b.wobbleSpeed;
+
+            // Horizontal wobble
+            const wobbleX = Math.sin(b.wobble) * 2;
+
+            // Fade out as it rises
+            b.opacity -= 0.003;
+
+            // Size reacts to current audio
+            const sizeMultiplier = 0.6 + avgAmplitude * 1.2;
+            const currentSize = b.baseSize * sizeMultiplier;
+
+            // Remove if off screen or faded
+            if (b.y < -currentSize || b.opacity <= 0) {
+                bubbles.splice(i, 1);
+                continue;
+            }
+
+            // Draw bubble
+            ctx.beginPath();
+            ctx.arc(b.x + wobbleX, b.y, currentSize, 0, Math.PI * 2);
+
+            // Gradient for 3D effect
+            const gradient = ctx.createRadialGradient(
+                b.x + wobbleX - currentSize * 0.3, b.y - currentSize * 0.3, 0,
+                b.x + wobbleX, b.y, currentSize
+            );
+            gradient.addColorStop(0, `rgba(255,255,255,${b.opacity * 0.5})`);
+            gradient.addColorStop(0.4, `rgba(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)},${b.opacity * 0.7})`);
+            gradient.addColorStop(1, `rgba(${Math.round(currentColorRGB.r)},${Math.round(currentColorRGB.g)},${Math.round(currentColorRGB.b)},${b.opacity * 0.2})`);
+
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Bubble outline
+            ctx.strokeStyle = `rgba(255,255,255,${b.opacity * 0.3})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
         }
     }
 
     function updateColor(ctxSource, width, height) {
         if (!active || !config.masterSwitch) return;
         const now = Date.now();
-        if (now - lastColorCheck < 200) return; // Throttle 200ms
+        if (now - lastColorCheck < 300) return; // Throttle 300ms
         lastColorCheck = now;
 
         // Sample center 50% of the screen
@@ -366,7 +723,7 @@ const VisualizerManager = (() => {
             let totalG = 0;
             let totalB = 0;
 
-            // Optimization: Skip pixels (step 20 = examine ~5% of pixels, sufficient for ambient)
+            // Optimization: Skip pixels (step 20 = examine ~5% of pixels)
             const step = 4 * 20;
 
             for (let i = 0; i < data.length; i += step) {
@@ -376,13 +733,11 @@ const VisualizerManager = (() => {
 
                 const max = Math.max(r, g, b);
                 const min = Math.min(r, g, b);
-                const range = max - min; // Proxy for saturation/chroma
+                const range = max - min;
 
-                // Score = Chroma^2 * Brightness
-                // Squaring chroma heavily favors colorful pixels over gray ones.
                 const score = (range * range) * max;
 
-                if (score > 1000) { // Threshold to ignore dark/muddy pixels
+                if (score > 1000) {
                     totalR += r * score;
                     totalG += g * score;
                     totalB += b * score;
@@ -391,21 +746,19 @@ const VisualizerManager = (() => {
             }
 
             if (totalScore > 0) {
-                // Weighted Average
                 let finalR = Math.floor(totalR / totalScore);
                 let finalG = Math.floor(totalG / totalScore);
                 let finalB = Math.floor(totalB / totalScore);
 
-                // Final Boost to ensure pop
                 const boost = 1.2;
                 finalR = Math.min(255, finalR * boost);
                 finalG = Math.min(255, finalG * boost);
                 finalB = Math.min(255, finalB * boost);
 
-                currentColor = `rgb(${finalR},${finalG},${finalB})`;
+                // Set target color for smooth interpolation
+                targetColor = { r: finalR, g: finalG, b: finalB };
             } else {
-                // Fallback if scene is completely black/gray
-                currentColor = 'rgb(200, 200, 200)';
+                targetColor = { r: 200, g: 200, b: 200 };
             }
         } catch (e) { }
     }

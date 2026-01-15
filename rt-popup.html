@@ -395,6 +395,33 @@
                 <span class="slider"></span>
             </label>
         </div>
+
+        <!-- New Advanced Filters -->
+        <div style="border-top: 1px solid #444; margin-top: 10px; padding-top: 10px;">
+            <div class="setting-group">
+                <div class="label-row">
+                    <span data-i18n="settings_sharpness" data-tooltip="tooltip_sharpness">Sharpness</span>
+                    <span id="val-sharpness">0%</span>
+                </div>
+                <input type="range" id="sharpness" min="0" max="100" value="0">
+            </div>
+
+            <div class="setting-group">
+                <div class="label-row">
+                    <span data-i18n="settings_highlights" data-tooltip="tooltip_highlights">Highlights</span>
+                    <span id="val-highlights">100%</span>
+                </div>
+                <input type="range" id="highlights" min="50" max="150" value="100">
+            </div>
+
+            <div class="setting-group">
+                <div class="label-row">
+                    <span data-i18n="settings_shadows" data-tooltip="tooltip_shadows">Shadows</span>
+                    <span id="val-shadows">100%</span>
+                </div>
+                <input type="range" id="shadows" min="50" max="150" value="100">
+            </div>
+        </div>
     </details>
 
     <!-- Effects & Visuals -->
@@ -460,6 +487,20 @@
                 <span class="slider"></span>
             </label>
         </div>
+
+        <div id="visualizer-settings" class="setting-group"
+            style="display:none; padding-left: 10px; border-left: 2px solid #555;">
+            <div class="label-row">
+                <span data-i18n="settings_visualizer_type" data-tooltip="tooltip_visualizer_type">Style</span>
+            </div>
+            <select id="visualizerType"
+                style="width: 100%; background:#333; color:white; border:1px solid #444; padding:6px; border-radius:4px; margin-top: 5px;">
+                <option value="bars" data-i18n="visualizer_bars">Bars</option>
+                <option value="soundwave" data-i18n="visualizer_soundwave">Soundwave</option>
+                <option value="ocean" data-i18n="visualizer_ocean">Ocean Wave</option>
+                <option value="bubbles" data-i18n="visualizer_bubbles">Bubbles</option>
+            </select>
+        </div>
         <div class="checkbox-row">
             <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Prioritize Performance</span>
             <label class="switch">
@@ -509,6 +550,39 @@
 
     </details>
 
+    <!-- Recommendations Section -->
+    <details class="section-group">
+        <summary class="section-title" data-i18n="settings_recommendations_title">RECOMMENDATIONS</summary>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 5px 0;">
+            <!-- Video Quality Enhancer -->
+            <div
+                style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 10px; border: 1px solid #333;">
+                <div style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 4px;"
+                    data-i18n="rec_vq_enhancer_name">Video Quality Enhancer</div>
+                <div style="font-size: 10px; color: #999; margin-bottom: 8px;" data-i18n="rec_vq_enhancer_desc">Improve
+                    sharpness, lighting, gamma and saturation</div>
+                <button id="rec-vq-enhancer"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px; width: 100%;">
+                    <span data-i18n="rec_open_store">Open in Chrome Web Store</span> →
+                </button>
+            </div>
+
+            <!-- Ambient Light for YouTube -->
+            <div
+                style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 10px; border: 1px solid #333;">
+                <div style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 4px;"
+                    data-i18n="rec_ambient_name">Ambient Light for YouTube™</div>
+                <div style="font-size: 10px; color: #999; margin-bottom: 8px;" data-i18n="rec_ambient_desc">Adds ambient
+                    lighting effects around the video</div>
+                <button id="rec-ambient-light"
+                    style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px; width: 100%;">
+                    <span data-i18n="rec_open_store">Open in Chrome Web Store</span> →
+                </button>
+            </div>
+        </div>
+    </details>
+
     <div style="display: flex; gap: 5px; margin-top: 20px; margin-bottom: 5px;">
         <button id="profile-export-btn" class="settings-btn"
             style="background: #3498db82; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
@@ -542,7 +616,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.8.5 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.8.6 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>

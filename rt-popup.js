@@ -82,7 +82,7 @@
                     userPicture = picture;
                     userName = name;
                     if (userPicture || userName) {
-                        showWelcome(userName || "User", userPicture);
+                        showWelcome(userName || "🎵", userPicture);
                         return;
                     }
                 }
@@ -103,7 +103,7 @@ fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&mkt=en-US')
         const randIndex = Math.floor(Math.random() * fondos.length);
 
         chrome.storage.sync.set({ fondosDiarios: fondos });
-        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.7)), url('${fondos[randIndex]}')`;
+        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)), url('${fondos[randIndex]}')`;
     })
     .catch(error => console.error("Error al obtener fondos:", error));
 document.body.style.backgroundPosition = "center";
@@ -120,6 +120,9 @@ const DEFAULT_CONFIG = {
     sepia: 0,
     invert: 0,
     hueLoop: false,
+    sharpness: 0,
+    highlights: 100,
+    shadows: 100,
     sensitivity: 50,
     audioEnabled: true,
     cameraShake: false,
@@ -129,6 +132,7 @@ const DEFAULT_CONFIG = {
     resolution: 100,
     pointerActive: false,
     visualizerActive: false,
+    visualizerType: 'bars',
     // WebGL
     webglActive: false,
     // Ambient Mode Defaults
@@ -150,6 +154,9 @@ const els = {
     sepia: document.getElementById('sepia'),
     invert: document.getElementById('invert'),
     hueLoop: document.getElementById('hueLoop'),
+    sharpness: document.getElementById('sharpness'),
+    highlights: document.getElementById('highlights'),
+    shadows: document.getElementById('shadows'),
     sensitivity: document.getElementById('sensitivity'),
     framerate: document.getElementById('framerate'),
     smoothness: document.getElementById('smoothness'),
@@ -159,6 +166,7 @@ const els = {
     cameraIntensity: document.getElementById('cameraIntensity'),
     pointerActive: document.getElementById('pointerActive'),
     visualizerActive: document.getElementById('visualizerActive'),
+    visualizerType: document.getElementById('visualizerType'),
     webglActive: document.getElementById('webglActive'),
     ambientMode: document.getElementById('ambientMode'),
     ambientScale: document.getElementById('ambientScale'),
@@ -175,6 +183,9 @@ const displayEls = {
     contrast: document.getElementById('val-contrast'),
     sepia: document.getElementById('val-sepia'),
     invert: document.getElementById('val-invert'),
+    sharpness: document.getElementById('val-sharpness'),
+    highlights: document.getElementById('val-highlights'),
+    shadows: document.getElementById('val-shadows'),
     sensitivity: document.getElementById('val-sensitivity'),
     framerate: document.getElementById('val-framerate'),
     smoothness: document.getElementById('val-smoothness'),
@@ -225,6 +236,9 @@ function updateUI() {
     els.sepia.value = config.sepia;
     els.invert.value = config.invert;
     els.hueLoop.checked = config.hueLoop;
+    if (els.sharpness) els.sharpness.value = config.sharpness;
+    if (els.highlights) els.highlights.value = config.highlights;
+    if (els.shadows) els.shadows.value = config.shadows;
     els.sensitivity.value = config.sensitivity;
     els.framerate.value = config.framerate;
     els.smoothness.value = config.smoothness;
@@ -234,6 +248,7 @@ function updateUI() {
     els.cameraIntensity.value = config.cameraIntensity;
     if (els.pointerActive) els.pointerActive.checked = config.pointerActive;
     if (els.visualizerActive) els.visualizerActive.checked = config.visualizerActive;
+    if (els.visualizerType) els.visualizerType.value = config.visualizerType || 'bars';
     if (els.ambientMode) els.ambientMode.checked = config.ambientMode;
     if (els.ambientScale) els.ambientScale.value = config.ambientScale;
 
@@ -243,6 +258,9 @@ function updateUI() {
 
     const cameraGroup = document.getElementById('camera-settings');
     if (cameraGroup) cameraGroup.style.display = config.cameraShake ? 'block' : 'none';
+
+    const visualizerGroup = document.getElementById('visualizer-settings');
+    if (visualizerGroup) visualizerGroup.style.display = config.visualizerActive ? 'block' : 'none';
 
     const ambientGroup = document.getElementById('ambient-settings');
     if (ambientGroup) ambientGroup.style.display = config.ambientMode ? 'block' : 'none';
@@ -258,6 +276,9 @@ function updateLabels() {
     displayEls.contrast.textContent = config.contrast + '%';
     displayEls.sepia.textContent = config.sepia + '%';
     displayEls.invert.textContent = config.invert + '%';
+    if (displayEls.sharpness) displayEls.sharpness.textContent = config.sharpness + '%';
+    if (displayEls.highlights) displayEls.highlights.textContent = config.highlights + '%';
+    if (displayEls.shadows) displayEls.shadows.textContent = config.shadows + '%';
     displayEls.sensitivity.textContent = config.sensitivity;
 
     displayEls.framerate.textContent = config.framerate + 'ms';
@@ -283,6 +304,9 @@ function updateConfigFromUI() {
     if (els.sepia) config.sepia = parseInt(els.sepia.value);
     if (els.invert) config.invert = parseInt(els.invert.value);
     if (els.hueLoop) config.hueLoop = els.hueLoop.checked;
+    if (els.sharpness) config.sharpness = parseInt(els.sharpness.value);
+    if (els.highlights) config.highlights = parseInt(els.highlights.value);
+    if (els.shadows) config.shadows = parseInt(els.shadows.value);
     if (els.sensitivity) config.sensitivity = parseInt(els.sensitivity.value);
     if (els.framerate) config.framerate = parseInt(els.framerate.value);
     if (els.smoothness) config.smoothness = parseInt(els.smoothness.value);
@@ -292,6 +316,7 @@ function updateConfigFromUI() {
     if (els.cameraShake) config.cameraShake = els.cameraShake.checked;
     if (els.pointerActive) config.pointerActive = els.pointerActive.checked;
     if (els.visualizerActive) config.visualizerActive = els.visualizerActive.checked;
+    if (els.visualizerType) config.visualizerType = els.visualizerType.value;
     if (els.ambientMode) config.ambientMode = els.ambientMode.checked;
     if (els.ambientScale) config.ambientScale = parseInt(els.ambientScale.value);
     if (els.webglActive) config.webglActive = els.webglActive.checked;
@@ -308,6 +333,9 @@ function updateConfigFromUI() {
 
     const cameraGroup = document.getElementById('camera-settings');
     if (cameraGroup) cameraGroup.style.display = config.cameraShake ? 'block' : 'none';
+
+    const visualizerGroup = document.getElementById('visualizer-settings');
+    if (visualizerGroup) visualizerGroup.style.display = config.visualizerActive ? 'block' : 'none';
 
     const ambientGroup = document.getElementById('ambient-settings');
     if (ambientGroup) ambientGroup.style.display = config.ambientMode ? 'block' : 'none';
@@ -811,3 +839,14 @@ const ProfileManager = (() => {
 
 // Init Profiles
 ProfileManager.init();
+
+// ----------------------------------------------------------------------
+// RECOMMENDATIONS BUTTONS
+// ----------------------------------------------------------------------
+document.getElementById('rec-vq-enhancer')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://chromewebstore.google.com/detail/video-quality-enhancer-im/kjhigpfcihnpjchpfnboofeecckigbmb' });
+});
+
+document.getElementById('rec-ambient-light')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://chromewebstore.google.com/detail/ambient-light-for-youtube/paponcgjfojgemddooebbgniglhkajkj' });
+});
