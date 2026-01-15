@@ -1,12 +1,17 @@
 {
   "name": "▷ ReflecTube",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "description": "__MSG_extensionDesc__",
   "manifest_version": 3,
   "author": "Manzbot",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.google.com/*",
+    "https://www.bing.com/*"
   ],
   "default_locale": "en",
   "action": {

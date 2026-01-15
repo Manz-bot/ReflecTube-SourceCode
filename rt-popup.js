@@ -1,3 +1,108 @@
+// ----------------------------------------------------------------------
+// PROFILE WELCOME MESSAGE
+// ----------------------------------------------------------------------
+(async function loadUserProfile() {
+    const welcomeBanner = document.getElementById('welcome-banner');
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profileGreeting = document.getElementById('profile-greeting');
+
+    if (!welcomeBanner || !profileAvatar || !profileGreeting) return;
+
+    let userName = null;
+    let userPicture = null;
+
+    function showWelcome(name, picture) {
+        if (!name) return;
+
+        const greetingTemplate = chrome.i18n.getMessage("welcome_greeting") || "Hello, {name}!";
+        profileGreeting.textContent = greetingTemplate.replace("{name}", name);
+
+        if (picture) {
+            profileAvatar.src = picture;
+            profileAvatar.style.display = 'block';
+        } else {
+            profileAvatar.style.display = 'none';
+            const initial = document.createElement('div');
+            initial.textContent = name.charAt(0).toUpperCase();
+            initial.style.cssText = 'width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ff0000,#cc0000);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:white;border:2px solid #ff0000;';
+            profileAvatar.parentNode.insertBefore(initial, profileAvatar);
+        }
+
+        welcomeBanner.style.display = 'block';
+    }
+    // Try Content Script Scraping from Google tabs
+    try {
+        const tabs = await chrome.tabs.query({ url: "https://*.google.com/*" });
+
+        for (const tab of tabs) {
+            try {
+                const results = await chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    func: () => {
+                        const selectors = [
+                            'img.gb_q.gbii', // Gmail
+                            'a[aria-label*="Google Account"] img', // New Google UI
+                            'img[data-src*="googleusercontent"]', // Search
+                            '.gb_ua.gbii', // Alternate Gmail
+                            'img[alt*="Profile"]', // Generic
+                            'img[src*="googleusercontent.com"]' // Any Google user content
+                        ];
+
+                        for (const selector of selectors) {
+                            const img = document.querySelector(selector);
+                            if (img && img.src && img.src.includes('googleusercontent')) {
+                                const parent = img.closest('a[aria-label]');
+                                let name = null;
+                                if (parent) {
+                                    const label = parent.getAttribute('aria-label');
+                                    // Extract name: "Google Account: John Doe" -> "John Doe"
+                                    const match = label.match(/:\s*(.+?)(?:\s*\(|$)/);
+                                    if (match) name = match[1].trim();
+                                }
+                                return {
+                                    picture: img.src.replace(/=s\d+-/, '=s128-'),
+                                    name: name
+                                };
+                            }
+                            console.log(img)
+                        }
+                        return null;
+                    }
+                });
+
+                if (results && results[0] && results[0].result) {
+                    const { picture, name } = results[0].result;
+                    userPicture = picture;
+                    userName = name;
+                    if (userPicture || userName) {
+                        showWelcome(userName || "User", userPicture);
+                        return;
+                    }
+                }
+            } catch (tabError) {
+                continue;
+            }
+        }
+    } catch (e) {
+        console.log("Content script scraping failed:", e);
+    }
+})();
+
+//WALLPAPEER DEL POPUP
+fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&mkt=en-US')
+    .then(response => response.json())
+    .then(data => {
+        const fondos = data.images.map(img => `https://www.bing.com${img.url}`);
+        const randIndex = Math.floor(Math.random() * fondos.length);
+
+        chrome.storage.sync.set({ fondosDiarios: fondos });
+        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,.7), rgba(0,0,0,.7)), url('${fondos[randIndex]}')`;
+    })
+    .catch(error => console.error("Error al obtener fondos:", error));
+document.body.style.backgroundPosition = "center";
+document.body.style.backgroundSize = "cover";
+
+// CONFIG
 const DEFAULT_CONFIG = {
     masterSwitch: true,
     opacity: 100,

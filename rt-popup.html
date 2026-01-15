@@ -130,7 +130,7 @@
         }
 
         button#reset-btn {
-            background: #333;
+            background: #33333370;
             color: #aaa;
             border: none;
             padding: 8px 16px;
@@ -209,7 +209,7 @@
 
         /* NEW STYLES */
         details.section-group {
-            background: #2a2a2a;
+            background: #252525d1;
             border-radius: 6px;
             margin-bottom: 10px;
             padding: 5px 10px;
@@ -217,8 +217,8 @@
         }
 
         details.section-group[open] {
-            border-color: #444;
-            background: #252525;
+            border-color: #ff000036;
+            background: #252525d1;
         }
 
         summary.section-title {
@@ -257,6 +257,21 @@
         <div data-i18n="update_available_msg">New version {version} available!</div>
         <button id="update-btn" data-i18n="update_btn_text">Download</button>
     </div>
+
+    <!-- Welcome Message with Profile -->
+    <div id="welcome-banner"
+        style="display: none; background: linear-gradient(135deg, rgb(26 26 46 / 70%) 0%, rgb(22 33 62 / 70%) 100%);; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img id="profile-avatar" src="" alt="Profile"
+                style="width: 42px; height: 42px; border-radius: 50%; border: 2px solid #ff0000; object-fit: cover; box-shadow: 0 2px 8px rgba(255,0,0,0.3);">
+            <div style="flex: 1;">
+                <div style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px;"
+                    data-i18n="welcome_profile">Profile</div>
+                <div id="profile-greeting" style="font-size: 14px; color: #fff; font-weight: 500;"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="tooltip-container"></div>
     <h2 style="display:flex;align-items:center;gap:8px;justify-content: center;">
         <svg viewBox="0 0 640.000000 640.000000" style="
@@ -496,10 +511,10 @@
 
     <div style="display: flex; gap: 5px; margin-top: 20px; margin-bottom: 5px;">
         <button id="profile-export-btn" class="settings-btn"
-            style="background: #3498db; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
+            style="background: #3498db82; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
             data-i18n="profile_export">Export Profile</button>
         <button id="profile-import-btn" class="settings-btn"
-            style="background: #9b59b6; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
+            style="background: #9b59b682; flex: 1; border:none; color:white; padding:8px; border-radius:4px; cursor:pointer;"
             data-i18n="profile_import">Import Profile</button>
     </div>
     <input type="file" id="import-file-input" accept=".json" style="display: none;">
@@ -527,7 +542,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.8.3 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.8.5 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>
