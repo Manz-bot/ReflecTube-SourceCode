@@ -1,0 +1,425 @@
+{
+    "extensionDesc": {
+        "message": "Para YouTube e YouTube Music, esta extensão reflete a interface do YouTube em um canvas (especificamente o player de vídeo). Espelhe ou transmita qualquer vídeo do YouTube atrás dele em tempo real com configurações extensas."
+    },
+    "extension_action": {
+        "message": "Espelhar vídeo"
+    },
+    "extension_err_connection": {
+        "message": "A página perdeu a conexão com a extensão, por favor atualize a página ou ative a extensão."
+    },
+    "extension_on": {
+        "message": "ReflecTube foi ativado"
+    },
+    "extension_off": {
+        "message": "ReflecTube foi desativado"
+    },
+    "menu_action": {
+        "message": "Abrir configuração"
+    },
+    "settings_interval": {
+        "message": "Intervalo"
+    },
+    "settings_quality": {
+        "message": "Qualidade"
+    },
+    "settings_blur": {
+        "message": "Desfoque"
+    },
+    "settings_opacity": {
+        "message": "Opacidade"
+    },
+    "settings_visualizer": {
+        "message": "Visualizador"
+    },
+    "settings_style": {
+        "message": "Estilo"
+    },
+    "settings_image": {
+        "message": "Alterar imagem"
+    },
+    "settings_text": {
+        "message": "Destacar texto"
+    },
+    "settings_filters": {
+        "message": "Filtros"
+    },
+    "settings_pointer": {
+        "message": "Seguir ponteiro"
+    },
+    "settings_reset": {
+        "message": "Restaurar"
+    },
+    "option_max": {
+        "message": "Sim - Máximo"
+    },
+    "option_average": {
+        "message": "Sim - Médio"
+    },
+    "option_yes": {
+        "message": "Sim"
+    },
+    "option_no": {
+        "message": "Não"
+    },
+    "option_video": {
+        "message": "Vídeo"
+    },
+    "option_thumbnail": {
+        "message": "Miniatura"
+    },
+    "option_image": {
+        "message": "Imagem personalizada"
+    },
+    "option_file": {
+        "message": "Arquivo"
+    },
+    "option_link": {
+        "message": "Link"
+    },
+    "option_grayscale": {
+        "message": "Escala de cinza"
+    },
+    "option_rgb": {
+        "message": "RGB"
+    },
+    "option_invert": {
+        "message": "Cores invertidas"
+    },
+    "option_saturate": {
+        "message": "Cores saturadas"
+    },
+    "option_sepia": {
+        "message": "Sépia"
+    },
+    "option_pointer_inverted": {
+        "message": "Sim - Invertido"
+    },
+    "option_reset": {
+        "message": "Deseja restaurar as configurações do ReflecTube para o padrão?"
+    },
+    "option_resetting": {
+        "message": "As configurações foram restauradas para o padrão"
+    },
+    "extension_opening_menu": {
+        "message": "O menu foi aberto"
+    },
+    "extension_opened_menu": {
+        "message": "O menu já está aberto"
+    },
+    "extension_err_menu": {
+        "message": "Não é possível abrir o menu fora do YouTube"
+    },
+    "devInfo": {
+        "message": "por Manzbot & Comunidade"
+    },
+    "devMessage": {
+        "message": "Muito obrigado {user} por usar o ReflecTube!"
+    },
+    "user": {
+        "message": "usuário"
+    },
+    "coming_soon": {
+        "message": "Em breve"
+    },
+    "loadError": {
+        "message": "Ocorreu um erro ao carregar o plugin Reflectube."
+    },
+    "settings_filters_title": {
+        "message": "FILTROS"
+    },
+    "settings_system_title": {
+        "message": "SISTEMA"
+    },
+    "settings_profiles_title": {
+        "message": "PERFIS"
+    },
+    "settings_effects_title": {
+        "message": "EFEITOS"
+    },
+    "settings_extension_switch": {
+        "message": "Extensão"
+    },
+    "settings_saturation": {
+        "message": "Saturação"
+    },
+    "settings_brightness": {
+        "message": "Brilho"
+    },
+    "settings_contrast": {
+        "message": "Contraste"
+    },
+    "settings_sepia": {
+        "message": "Sépia"
+    },
+    "settings_audio_reactivity": {
+        "message": "Reatividade de Áudio"
+    },
+    "settings_audio_sensitivity": {
+        "message": "Sensibilidade de Áudio"
+    },
+    "settings_framerate": {
+        "message": "Taxa de Quadros (ms)"
+    },
+    "settings_smoothness": {
+        "message": "Suavidade"
+    },
+    "settings_resolution": {
+        "message": "Resolução (Px)"
+    },
+    "settings_camera_shake": {
+        "message": "Tremor de Câmera"
+    },
+    "settings_camera_intensity": {
+        "message": "Intensidade da Câmera"
+    },
+    "settings_legacy_mode": {
+        "message": "Modo Legado (2 Canvas)"
+    },
+    "settings_pointer_follow": {
+        "message": "Seguir Ponteiro (Invertido)"
+    },
+    "settings_visualizer_color": {
+        "message": "Visualizador de Áudio (Cor dinâmica)"
+    },
+    "settings_ambient_mode": {
+        "message": "Modo Ambiente (PearDesktop)"
+    },
+    "settings_ambient_size": {
+        "message": "Escala Ambiente (%)"
+    },
+    "tooltip_ambient_mode": {
+        "message": "Injeta o reflexo dentro do player. Otimizado para Shorts/Miniplayer. Substitui o modo padrão."
+    },
+    "tooltip_ambient_size": {
+        "message": "Ajuste o tamanho do brilho ambiente em relação ao vídeo."
+    },
+    "settings_reset_config": {
+        "message": "Restaurar Configuração"
+    },
+    "ui_weak": {
+        "message": "Fraco"
+    },
+    "ui_medium": {
+        "message": "Médio"
+    },
+    "ui_strong": {
+        "message": "Forte"
+    },
+    "ui_by": {
+        "message": "Por Manzbot & Comunidade"
+    },
+    "update_available_msg": {
+        "message": "Nova versão {version} disponível!"
+    },
+    "update_btn_text": {
+        "message": "Baixar atualização"
+    },
+    "tooltip_master": {
+        "message": "Ativr ou desativar a extensão globalmente."
+    },
+    "tooltip_opacity": {
+        "message": "Ajustar a transparência do reflexo."
+    },
+    "tooltip_blur": {
+        "message": "Aplicar um efeito de desfoque ao reflexo."
+    },
+    "tooltip_saturation": {
+        "message": "Ajustar a intensidade das cores."
+    },
+    "tooltip_brightness": {
+        "message": "Ajustar o nível de brilho."
+    },
+    "tooltip_contrast": {
+        "message": "Ajustar o contraste entre áreas claras e escuras."
+    },
+    "tooltip_sepia": {
+        "message": "Aplicar um filtro de tom sépia vintage."
+    },
+    "tooltip_audio": {
+        "message": "Ativar efeitos visuais que reagem à saída de áudio."
+    },
+    "tooltip_sensitivity": {
+        "message": "Ajustar a sensibilidade dos visuais ao volume do áudio."
+    },
+    "tooltip_framerate": {
+        "message": "Definir a taxa de atualização do reflexo (menos ms = mais suave)."
+    },
+    "tooltip_smoothness": {
+        "message": "Ajustar a suavidade da interpolação de movimento."
+    },
+    "tooltip_resolution": {
+        "message": "Definir a resolução de renderização do canvas."
+    },
+    "tooltip_camerashake": {
+        "message": "Simular um efeito de movimento de câmera na mão."
+    },
+    "tooltip_cameraintensity": {
+        "message": "Ajustar a intensidade do tremor da câmera."
+    },
+    "tooltip_legacy": {
+        "message": "Usar o método de renderização antigo (pode ser mais rápido em alguns dispositivos)."
+    },
+    "tooltip_pointer": {
+        "message": "O reflexo se move na direção oposta do mouse."
+    },
+    "tooltip_visualizer": {
+        "message": "Mostrar um visualizador de cores dinâmico baseado em frequências de áudio."
+    },
+    "settings_visualizer_type": {
+        "message": "Estilo do Visualizador"
+    },
+    "tooltip_visualizer_type": {
+        "message": "Escolher o estilo de visualização para o áudio."
+    },
+    "visualizer_bars": {
+        "message": "Barras"
+    },
+    "visualizer_soundwave": {
+        "message": "Onda Sonora"
+    },
+    "visualizer_ocean": {
+        "message": "Onda do Oceano"
+    },
+    "visualizer_bubbles": {
+        "message": "Bolhas"
+    },
+    "settings_invert": {
+        "message": "Inverter"
+    },
+    "settings_hueloop": {
+        "message": "Animação de Loop de Matiz"
+    },
+    "tooltip_invert": {
+        "message": "Inverter as cores do reflexo."
+    },
+    "tooltip_hueloop": {
+        "message": "Ciclar automaticamente pelas cores continuamente."
+    },
+    "settings_sharpness": {
+        "message": "Nitidez"
+    },
+    "tooltip_sharpness": {
+        "message": "Melhorar a definição de bordas e clareza de detalhes."
+    },
+    "settings_highlights": {
+        "message": "Luzes Altas"
+    },
+    "tooltip_highlights": {
+        "message": "Ajustar o brilho das áreas claras."
+    },
+    "settings_shadows": {
+        "message": "Sombras"
+    },
+    "tooltip_shadows": {
+        "message": "Ajustar o brilho das áreas escuras."
+    },
+    "profile_save": {
+        "message": "Salvar"
+    },
+    "profile_delete": {
+        "message": "Excluir"
+    },
+    "profile_export": {
+        "message": "Exportar Perfil"
+    },
+    "profile_import": {
+        "message": "Importar Perfil"
+    },
+    "profile_new_option": {
+        "message": "➕ Criar Novo..."
+    },
+    "profile_modal_title": {
+        "message": "Nomear Novo Perfil"
+    },
+    "profile_modal_placeholder": {
+        "message": "Nome do Perfil"
+    },
+    "profile_modal_cancel": {
+        "message": "Cancelar"
+    },
+    "profile_modal_create": {
+        "message": "Criar"
+    },
+    "profile_alert_overwrite": {
+        "message": "Atualizar perfil \"{name}\" com as configurações atuais?"
+    },
+    "profile_alert_delete": {
+        "message": "Excluir perfil \"{name}\"?"
+    },
+    "profile_alert_copied": {
+        "message": "Perfil \"{name}\" copiado para a área de transferência!"
+    },
+    "profile_alert_imported": {
+        "message": "Perfil \"{name}\" importado com sucesso!"
+    },
+    "settings_webgl": {
+        "message": "Renderizador WebGL (GPU)"
+    },
+    "tooltip_webgl": {
+        "message": "Ativar aceleração GPU experimental para efeitos de distorção líquida."
+    },
+    "welcome_profile": {
+        "message": "Perfil"
+    },
+    "welcome_greeting": {
+        "message": "Olá, {name}!"
+    },
+    "settings_recommendations_title": {
+        "message": "RECOMENDAÇÕES"
+    },
+    "rec_vq_enhancer_name": {
+        "message": "Video Quality Enhancer"
+    },
+    "rec_vq_enhancer_desc": {
+        "message": "Melhore a nitidez, iluminação, gama e saturação de qualquer vídeo"
+    },
+    "rec_ambient_name": {
+        "message": "Ambient Light for YouTube™"
+    },
+    "rec_ambient_desc": {
+        "message": "Adiciona efeitos de iluminação ambiente ao redor do vídeo"
+    },
+    "rec_open_store": {
+        "message": "Abrir na Chrome Web Store"
+    },
+    "settings_music_only": {
+        "message": "Apenas Vídeos Musicais"
+    },
+    "tooltip_music_only": {
+        "message": "Ativar efeitos apenas em vídeos musicais. Detecta o gênero automaticamente."
+    },
+    "preset_label": {
+        "message": "🎨 Preset"
+    },
+    "tooltip_preset": {
+        "message": "Aplicar um preset de filtro que configura vários controles deslizantes de uma vez."
+    },
+    "preset_none": {
+        "message": "— Personalizado —"
+    },
+    "preset_cinema": {
+        "message": "🎬 Cinema"
+    },
+    "preset_neon": {
+        "message": "💜 Neon"
+    },
+    "preset_vintage": {
+        "message": "📷 Vintage"
+    },
+    "preset_lofi": {
+        "message": "🌙 Lo-fi"
+    },
+    "preset_rgb": {
+        "message": "🌈 RGB / Arco-íris"
+    },
+    "fps_label": {
+        "message": "FPS"
+    },
+    "platform_youtube": {
+        "message": "▶ YouTube"
+    },
+    "platform_ytmusic": {
+        "message": "🎵 YouTube Music"
+    }
+}

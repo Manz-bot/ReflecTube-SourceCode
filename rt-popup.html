@@ -305,6 +305,10 @@
         <!-- Profiles Section -->
         <details class="section-group" open>
             <summary class="section-title" data-i18n="settings_profiles_title">PROFILES</summary>
+            <div id="platform-indicator"
+                style="font-size: 10px; color: #aaa; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                <span id="platform-label"></span>
+            </div>
             <div class="setting-group" style="display:flex; gap:5px; margin-bottom:10px;">
                 <select id="profile-select"
                     style="flex:1; background:#333; color:white; border:1px solid #444; padding:5px; border-radius:4px;">
@@ -331,6 +335,21 @@
     <!-- Filters Section -->
     <details class="section-group">
         <summary class="section-title" data-i18n="settings_filters_title">FILTERS</summary>
+
+        <div class="setting-group" style="margin-bottom: 8px;">
+            <div class="label-row">
+                <span data-i18n="preset_label" data-tooltip="tooltip_preset">🎨 Preset</span>
+            </div>
+            <select id="filterPreset"
+                style="width: 100%; background:#333; color:white; border:1px solid #444; padding:6px; border-radius:4px; margin-top: 4px;">
+                <option value="none" data-i18n="preset_none">— Custom —</option>
+                <option value="cinema" data-i18n="preset_cinema">🎬 Cinema</option>
+                <option value="neon" data-i18n="preset_neon">💜 Neon</option>
+                <option value="vintage" data-i18n="preset_vintage">📷 Vintage</option>
+                <option value="lofi" data-i18n="preset_lofi">🌙 Lo-fi</option>
+                <option value="rgb" data-i18n="preset_rgb">🌈 RGB / Rainbow</option>
+            </select>
+        </div>
 
         <div class="setting-group">
             <div class="label-row">
@@ -444,6 +463,14 @@
                 <span id="val-sensitivity">50</span>
             </div>
             <input type="range" id="sensitivity" min="0" max="100" value="50">
+
+            <div class="checkbox-row" style="margin-top: 8px;">
+                <span data-i18n="settings_music_only" data-tooltip="tooltip_music_only">Music Videos Only</span>
+                <label class="switch">
+                    <input type="checkbox" id="musicOnly">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <div class="checkbox-row" style="margin-top: 10px;">
@@ -520,7 +547,11 @@
 
     <!-- System -->
     <details class="section-group">
-        <summary class="section-title" data-i18n="settings_system_title">SYSTEM</summary>
+        <summary class="section-title" data-i18n="settings_system_title">SYSTEM
+            <span id="fps-badge"
+                style="margin-left: auto; font-size: 10px; background: #2a2a2a; padding: 2px 8px; border-radius: 10px; color: #4CAF50; font-weight: bold; letter-spacing: 0.5px;">--
+                FPS</span>
+        </summary>
 
         <div class="setting-group">
             <div class="label-row">
@@ -616,7 +647,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.8.6 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.9.0 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>

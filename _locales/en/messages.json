@@ -266,6 +266,24 @@
   "tooltip_visualizer": {
     "message": "Show a dynamic color visualizer based on audio frequencies."
   },
+  "settings_visualizer_type": {
+    "message": "Visualizer Style"
+  },
+  "tooltip_visualizer_type": {
+    "message": "Choose the visualization style for audio."
+  },
+  "visualizer_bars": {
+    "message": "Bars"
+  },
+  "visualizer_soundwave": {
+    "message": "Soundwave"
+  },
+  "visualizer_ocean": {
+    "message": "Ocean Wave"
+  },
+  "visualizer_bubbles": {
+    "message": "Bubbles"
+  },
   "settings_invert": {
     "message": "Invert"
   },
@@ -277,6 +295,24 @@
   },
   "tooltip_hueloop": {
     "message": "Automatically cycle through colors continuously."
+  },
+  "settings_sharpness": {
+    "message": "Sharpness"
+  },
+  "tooltip_sharpness": {
+    "message": "Enhance edge definition and detail clarity."
+  },
+  "settings_highlights": {
+    "message": "Highlights"
+  },
+  "tooltip_highlights": {
+    "message": "Adjust brightness of light areas."
+  },
+  "settings_shadows": {
+    "message": "Shadows"
+  },
+  "tooltip_shadows": {
+    "message": "Adjust brightness of dark areas."
   },
   "profile_save": {
     "message": "Save"
@@ -322,5 +358,68 @@
   },
   "tooltip_webgl": {
     "message": "Enable experimental GPU acceleration for liquid distortion effects."
+  },
+  "welcome_profile": {
+    "message": "Profile"
+  },
+  "welcome_greeting": {
+    "message": "Hello, {name}!"
+  },
+  "settings_recommendations_title": {
+    "message": "RECOMMENDATIONS"
+  },
+  "rec_vq_enhancer_name": {
+    "message": "Video Quality Enhancer"
+  },
+  "rec_vq_enhancer_desc": {
+    "message": "Improve sharpness, lighting, gamma and saturation of any video"
+  },
+  "rec_ambient_name": {
+    "message": "Ambient Light for YouTube™"
+  },
+  "rec_ambient_desc": {
+    "message": "Adds ambient lighting effects around the video"
+  },
+  "rec_open_store": {
+    "message": "Open in Chrome Web Store"
+  },
+  "settings_music_only": {
+    "message": "Music Videos Only"
+  },
+  "tooltip_music_only": {
+    "message": "Only activate effects on music videos. Detects genre automatically."
+  },
+  "preset_label": {
+    "message": "🎨 Preset"
+  },
+  "tooltip_preset": {
+    "message": "Apply a one-click filter preset that configures multiple sliders at once."
+  },
+  "preset_none": {
+    "message": "— Custom —"
+  },
+  "preset_cinema": {
+    "message": "🎬 Cinema"
+  },
+  "preset_neon": {
+    "message": "💜 Neon"
+  },
+  "preset_vintage": {
+    "message": "📷 Vintage"
+  },
+  "preset_lofi": {
+    "message": "🌙 Lo-fi"
+  },
+  "preset_rgb": {
+    "message": "🌈 RGB / Rainbow"
+  },
+  "fps_label": {
+    "message": "FPS"
+  },
+  "platform_youtube": {
+    "message": "▶ YouTube"
+  },
+  "platform_ytmusic": {
+    "message": "🎵 YouTube Music"
   }
 }

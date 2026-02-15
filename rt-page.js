@@ -23,7 +23,8 @@ let config = {
     visualizerActive: false, // Dynamic visualizer
     visualizerType: 'bars', // Visualizer style: bars, soundwave, ocean
     ambientMode: false, // Smart Ambient Mode
-    ambientScale: 110 // Scale %
+    ambientScale: 110, // Scale %
+    musicOnly: true // Only activate audio reactivity on music videos
 };
 
 // ----------------------------------------------------------------------
@@ -66,7 +67,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         VisualizerManager.updateState();
 
         // Ensure Audio is Ready if newly enabled
-        if (config.audioEnabled || config.visualizerActive) {
+        if (isAudioActive() || config.visualizerActive) {
             AudioManager.resume();
         }
 
@@ -80,7 +81,58 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         }
     }
+
+    if (request.type === 'GET_FPS') {
+        sendResponse({ fps: ModernEngine.getFps ? ModernEngine.getFps() : 0 });
+        return true;
+    }
 });
+
+// ----------------------------------------------------------------------
+// MUSIC VIDEO DETECTION
+// ----------------------------------------------------------------------
+function isMusicVideo() {
+    // 1. YouTube Music domain — always music
+    if (location.hostname.includes('music.youtube.com')) return true;
+
+    // 2. Check ytmusic-player element (YTM embedded)
+    if (document.querySelector('ytmusic-player')) return true;
+
+    // 3. Check LD+JSON microformat (updates on SPA navigation, unlike meta tags)
+    try {
+        const microformatScript = document.querySelector('#microformat script[type="application/ld+json"]');
+        if (microformatScript) {
+            const data = JSON.parse(microformatScript.textContent);
+            if (data.genre && data.genre.toLowerCase().includes('music')) return true;
+        }
+    } catch (e) { /* JSON parse error, skip */ }
+
+    // 4. Check ytInitialPlayerResponse (fallback for genre detection)
+    try {
+        const playerResponse = window.ytInitialPlayerResponse;
+        if (playerResponse?.microformat?.playerMicroformatRenderer?.category) {
+            const category = playerResponse.microformat.playerMicroformatRenderer.category.toLowerCase();
+            if (category.includes('music')) return true;
+        }
+    } catch (e) { /* skip */ }
+
+    // 5. Check for YouTube music badge in the player
+    if (document.querySelector('span.ytp-music-badge')) return true;
+
+    // 6. Check for "Music" in the video category info
+    const categoryEl = document.querySelector('#info-rows yt-formatted-string a[href*="/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"]');
+    if (categoryEl) return true; // Links to YouTube Music category channel
+
+    return false;
+}
+
+// Returns true if audio effects should be active right now
+// Combines audioEnabled toggle + musicOnly filter (evaluated per-frame for instant response)
+function isAudioActive() {
+    if (!config.audioEnabled) return false;
+    if (config.musicOnly && !isMusicVideo()) return false;
+    return true;
+}
 
 function applyGlobalStyles() {
     const root = document.documentElement;
@@ -1088,7 +1140,7 @@ const WebGLEngine = (() => {
         // --- AUDIO ANALYSIS ---
         // (Copied from ModernEngine logic)
         let bass = 0.0;
-        if (config.audioEnabled) {
+        if (isAudioActive()) {
             AudioManager.connect(video); // Ensure connected
             const analyser = AudioManager.getAnalyser();
             if (analyser) {
@@ -1168,6 +1220,9 @@ const ModernEngine = (() => {
         decibels: 0
     };
     let lastTime = 0;
+    let fpsFrameCount = 0;
+    let fpsLastTime = 0;
+    let currentFps = 0;
 
     function start() {
         VideoManager.init(); // Ensure observer is running
@@ -1207,7 +1262,7 @@ const ModernEngine = (() => {
     }
 
     function analyzeAudio() {
-        if (!config.audioEnabled && !config.visualizerActive) {
+        if (!isAudioActive() && !config.visualizerActive) {
             state.decibels = 0;
             return;
         }
@@ -1221,7 +1276,7 @@ const ModernEngine = (() => {
 
         VisualizerManager.updateBars(dataArray, bufferLength);
 
-        if (config.audioEnabled) {
+        if (isAudioActive()) {
             let sum = 0;
             for (let i = 0; i < bufferLength / 2; i++) sum += dataArray[i];
             let average = sum / (bufferLength / 2);
@@ -1232,8 +1287,18 @@ const ModernEngine = (() => {
     }
 
     function loop(timestamp) {
+        /* eliminar el requestAnimationFrame y borrar el rt-container si no es chrome */;
+        if (!chrome.runtime?.id) return clearInterval(loopId) & document.getElementById('rt-container')?.remove() & document.getElementById('rt_visualizer_canvas')?.remove() & stop();
         if (!loopId) return;
         loopId = requestAnimationFrame(loop);
+
+        // FPS tracking
+        fpsFrameCount++;
+        if (timestamp - fpsLastTime >= 1000) {
+            currentFps = fpsFrameCount;
+            fpsFrameCount = 0;
+            fpsLastTime = timestamp;
+        }
 
         if (!config.masterSwitch) return;
         if (timestamp - lastTime < config.framerate) return;
@@ -1253,7 +1318,7 @@ const ModernEngine = (() => {
             if (state.activeVideo !== bestVideo) {
                 state.activeVideo = bestVideo;
                 canvasState.lastImageData = null;
-                if (config.audioEnabled || config.visualizerActive) AudioManager.connect(state.activeVideo);
+                if (isAudioActive() || config.visualizerActive) AudioManager.connect(state.activeVideo);
             }
         } else {
             // Fallback to Thumbnail
@@ -1267,7 +1332,7 @@ const ModernEngine = (() => {
             }
 
             // Critical: Connect to any playing media for audio when in thumbnail mode
-            if (config.audioEnabled || config.visualizerActive) {
+            if (isAudioActive() || config.visualizerActive) {
                 const media = document.querySelectorAll('video, audio');
                 for (let m of media) {
                     if (!m.paused && m.readyState > 2) {
@@ -1311,7 +1376,7 @@ const ModernEngine = (() => {
         }
 
         let scale = 110;
-        if (config.audioEnabled) {
+        if (isAudioActive()) {
             // Amplify the reaction for static thumbnails
             const reaction = isVideo ? (state.decibels / 4) : (state.decibels / 2);
             scale += reaction;
@@ -1335,7 +1400,9 @@ const ModernEngine = (() => {
         VisualizerManager.updateColor(ctx, targetW, targetH);
     }
 
-    return { start, stop };
+    function getFps() { return currentFps; }
+
+    return { start, stop, getFps };
 })();
 
 
@@ -1441,7 +1508,7 @@ const AmbientEngine = (() => {
             if (!canvas || !canvas.isConnected || activeVideo !== playing || parentContainer !== newContainer) {
                 activeVideo = playing;
                 injectCanvas(activeVideo);
-                if (config.audioEnabled || config.visualizerActive) AudioManager.connect(activeVideo);
+                if (isAudioActive() || config.visualizerActive) AudioManager.connect(activeVideo);
             }
         }
     }
@@ -1498,7 +1565,7 @@ const AmbientEngine = (() => {
     }
 
     function analyzeAudio() {
-        if (!config.audioEnabled && !config.visualizerActive) {
+        if (!isAudioActive() && !config.visualizerActive) {
             state.decibels = 0;
             return;
         }
@@ -1512,7 +1579,7 @@ const AmbientEngine = (() => {
 
         VisualizerManager.updateBars(dataArray, bufferLength);
 
-        if (config.audioEnabled) {
+        if (isAudioActive()) {
             let sum = 0;
             for (let i = 0; i < bufferLength / 2; i++) sum += dataArray[i];
             let average = sum / (bufferLength / 2);
@@ -1523,6 +1590,8 @@ const AmbientEngine = (() => {
     }
 
     function loop(timestamp) {
+        /* eliminar el requestAnimationFrame y borrar el rt-container si no es chrome */
+        if (!chrome.runtime?.id) return clearInterval(loopId) & document.getElementById('rt-ambient-canvas')?.remove() & document.getElementById('rt_visualizer_canvas')?.remove() & stop();
         if (!loopId) return;
         loopId = requestAnimationFrame(loop);
 
@@ -1557,7 +1626,7 @@ const AmbientEngine = (() => {
 
             // Critical: If we are in Audio Mode (Thumbnail), ensure Audio is connected!
             // activeVideo might be null, paused, or have no video track, but music is playing.
-            if (config.audioEnabled || config.visualizerActive) {
+            if (isAudioActive() || config.visualizerActive) {
                 const media = document.querySelectorAll('video, audio');
                 for (let m of media) {
                     if (!m.paused && m.readyState > 2) {
@@ -1605,7 +1674,7 @@ const AmbientEngine = (() => {
         }
 
         let currentScale = config.ambientScale / 100;
-        if (config.audioEnabled && state.decibels > 0) {
+        if (isAudioActive() && state.decibels > 0) {
             // Amplify the reaction for static thumbnails to make it more visible
             const reaction = isVideo ? (state.decibels / 500) : (state.decibels / 200);
             currentScale += reaction;

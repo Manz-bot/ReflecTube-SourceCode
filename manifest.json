@@ -1,6 +1,6 @@
 {
   "name": "▷ ReflecTube",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "description": "__MSG_extensionDesc__",
   "manifest_version": 3,
   "author": "Manzbot",
@@ -20,6 +20,9 @@
       "48": "png/icon48.png",
       "128": "png/icon128.png"
     }
+  },
+  "background": {
+    "service_worker": "rt-background.js"
   },
   "icons": {
     "48": "png/icon48.png",

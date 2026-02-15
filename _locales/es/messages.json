@@ -266,6 +266,24 @@
   "tooltip_visualizer": {
     "message": "Muestra un visualizador de color dinámico basado en frecuencias de audio."
   },
+  "settings_visualizer_type": {
+    "message": "Estilo del Visualizador"
+  },
+  "tooltip_visualizer_type": {
+    "message": "Elige el estilo de visualización para el audio."
+  },
+  "visualizer_bars": {
+    "message": "Barras"
+  },
+  "visualizer_soundwave": {
+    "message": "Onda de Sonido"
+  },
+  "visualizer_ocean": {
+    "message": "Ola Oceánica"
+  },
+  "visualizer_bubbles": {
+    "message": "Burbujas"
+  },
   "settings_invert": {
     "message": "Invertir"
   },
@@ -277,6 +295,24 @@
   },
   "tooltip_hueloop": {
     "message": "Ciclo de colores automático y continuo."
+  },
+  "settings_sharpness": {
+    "message": "Nitidez"
+  },
+  "tooltip_sharpness": {
+    "message": "Mejora la definición de bordes y claridad de detalles."
+  },
+  "settings_highlights": {
+    "message": "Altas Luces"
+  },
+  "tooltip_highlights": {
+    "message": "Ajusta el brillo de las áreas claras."
+  },
+  "settings_shadows": {
+    "message": "Sombras"
+  },
+  "tooltip_shadows": {
+    "message": "Ajusta el brillo de las áreas oscuras."
   },
   "profile_save": {
     "message": "Guardar"
@@ -322,5 +358,68 @@
   },
   "tooltip_webgl": {
     "message": "Habilita la aceleración por GPU para efectos de distorsión líquida (Experimental)."
+  },
+  "welcome_profile": {
+    "message": "Perfil"
+  },
+  "welcome_greeting": {
+    "message": "¡Hola, {name}!"
+  },
+  "settings_recommendations_title": {
+    "message": "RECOMENDACIONES"
+  },
+  "rec_vq_enhancer_name": {
+    "message": "Video Quality Enhancer"
+  },
+  "rec_vq_enhancer_desc": {
+    "message": "Mejora la nitidez, iluminación, gamma y saturación de cualquier video"
+  },
+  "rec_ambient_name": {
+    "message": "Ambient Light for YouTube™"
+  },
+  "rec_ambient_desc": {
+    "message": "Añade efectos de iluminación ambiental alrededor del video"
+  },
+  "rec_open_store": {
+    "message": "Abrir en Chrome Web Store"
+  },
+  "settings_music_only": {
+    "message": "Solo Videos Musicales"
+  },
+  "tooltip_music_only": {
+    "message": "Activa los efectos solo en videos musicales. Detecta el género automáticamente."
+  },
+  "preset_label": {
+    "message": "🎨 Preset"
+  },
+  "tooltip_preset": {
+    "message": "Aplica un preset de filtros que configura varios controles deslizantes a la vez."
+  },
+  "preset_none": {
+    "message": "— Personalizado —"
+  },
+  "preset_cinema": {
+    "message": "🎬 Cine"
+  },
+  "preset_neon": {
+    "message": "💜 Neón"
+  },
+  "preset_vintage": {
+    "message": "📷 Vintage"
+  },
+  "preset_lofi": {
+    "message": "🌙 Lo-fi"
+  },
+  "preset_rgb": {
+    "message": "🌈 RGB / Arcoíris"
+  },
+  "fps_label": {
+    "message": "FPS"
+  },
+  "platform_youtube": {
+    "message": "▶ YouTube"
+  },
+  "platform_ytmusic": {
+    "message": "🎵 YouTube Music"
   }
 }
