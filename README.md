@@ -6,7 +6,7 @@
 
   **Transform Your YouTube Experience with Immersive Reflections & Visuals**
 
-  [![Version](https://img.shields.io/badge/version-0.8.0-blue.svg?style=for-the-badge)](https://github.com/yourusername/reflectube)
+  [![Version](https://img.shields.io/badge/version-0.9.1-blue.svg?style=for-the-badge)](https://github.com/yourusername/reflectube)
   [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange.svg?style=for-the-badge)](https://developer.chrome.com/docs/extensions/mv3/intro/)
   [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 
@@ -24,6 +24,8 @@
 
 **ReflecTube** brings a new dimension to your YouTube watching experience. It creates a dynamic, real-time reflection of the video player, adding depth and atmosphere to your browser. With advanced features like reactive audio visualizers, ambient lighting modes, and customizable filters, standard viewing becomes an immersive event.
 
+Works on **YouTube** and **YouTube Music**.
+
 ## ✨ Key Features
 
 | Feature | Description |
@@ -31,11 +33,16 @@
 | **📺 Real-time Reflection** | Mirrors the YouTube video player in a customizable canvas behind the video. |
 | **💡 Ambient Mode** | "PearDesktop" style ambient lighting that glows and reacts to the video content. |
 | **🔊 Audio Reactivity** | Visuals that dance to the beat! Includes a frequency visualizer and camera shake effects. |
-| **🎨 Deep Customization** | Adjust Blur, Opacity, Saturation, Contrast, Brightness, and Sepia to match your taste. |
-| **🖌️ Filters & Effects** | Apply special filters like Invert, Grayscale, and the mesmerizing Hue Loop animation. |
-| **🖱️ Interactive** | The reflection can follow your mouse pointer movements for a parallax-like effect. |
-| **💾 Profiles** | Save, load, export, and import your favorite configuration setups easily. |
+| **🎨 Deep Customization** | Adjust Blur, Opacity, Saturation, Contrast, Brightness, Sepia, Sharpness, Highlights & Shadows. |
+| **🖌️ Filters & Effects** | Apply Invert, Grayscale, Hue Loop animation, and more. |
+| **🎬 Filter Presets** | One-click presets: Cinema, Neon, Vintage, Lo-fi, and RGB/Rainbow. |
+| **✂️ Letterbox Crop** | Real-time black bar detection and removal for the canvas reflection and the video player (beta — consensus-based stable detection). |
+| **🖱️ Interactive** | The reflection follows your mouse pointer movements for a parallax-like effect. |
+| **💾 Platform Profiles** | Separate profiles for YouTube and YouTube Music. Save, load, export and import configurations. Auto-save keeps your active profile up to date. |
 | **⚡ WebGL Support** | Experimental GPU acceleration for advanced liquid distortion effects. |
+| **📊 FPS Monitor** | Real-time performance counter with color-coded badge (green/yellow/red). |
+| **🔔 Update Badge** | Red notification dot on the extension icon when a new version is available. |
+| **🌐 Multi-language** | English, Spanish, Portuguese, French, German and Japanese. |
 
 ---
 
@@ -70,17 +77,33 @@
 
 Open the ReflecTube popup by clicking the extension icon in your toolbar.
 
-### 🎛️ General Settings
-*   **Filters:** Quick-toggle specific visual filters.
-*   **System:** Control global extension behavior.
-*   **Profiles:** Manage your custom presets.
-*   **Effects:** Toggles for Audio Reactivity, Camera Shake, etc.
+### 🎛️ Sections
+
+| Section | What's inside |
+| :--- | :--- |
+| **Filters** | Opacity, Blur, Saturation, Brightness, Contrast, Sepia, Invert, Sharpness, Highlights, Shadows, Hue Loop. Plus a **Preset** dropdown (Cinema, Neon, Vintage, Lo-fi, RGB). |
+| **Effects** | Audio Reactivity & Sensitivity, Camera Shake & Intensity, Audio Visualizer (Bars / Soundwave / Ocean / Bubbles), Pointer Follow, WebGL, Ambient Mode & Scale, Music-Only toggle. |
+| **System** | Frame Rate, Smoothness, Resolution, **Crop Canvas** (letterbox), **Crop Video** (letterbox), FPS badge. |
+| **Profiles** | Create, save, delete, export & import profiles. Profiles are separated per platform (YouTube vs YouTube Music). Changes auto-save to the active profile. |
 
 ### 🎚️ Fine Tuning
-Adjust sliders to perfect the look:
-*   **Interval & Frame Rate:** Control the smoothness and performance.
+*   **Frame Rate:** Controls the smoothness and performance of the reflection (ms between frames).
 *   **Blur & Opacity:** Define how subtle or distinct the reflection is.
 *   **Audio Sensitivity:** Calibrate how much the visuals react to sound.
+*   **Crop Canvas / Crop Video:** Auto-detect and remove horizontal black bars (letterboxing) in real time.
+
+---
+
+## 🌐 Supported Languages
+
+| Language | Locale |
+| :--- | :--- |
+| English | `en` |
+| Español | `es` |
+| Português | `pt` |
+| Français | `fr` |
+| Deutsch | `de` |
+| 日本語 | `ja` |
 
 ---
 

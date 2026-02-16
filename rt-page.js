@@ -24,7 +24,9 @@ let config = {
     visualizerType: 'bars', // Visualizer style: bars, soundwave, ocean
     ambientMode: false, // Smart Ambient Mode
     ambientScale: 110, // Scale %
-    musicOnly: true // Only activate audio reactivity on music videos
+    musicOnly: true, // Only activate audio reactivity on music videos
+    cropCanvas: true, // Auto-crop black bars from canvas reflection
+    cropVideo: false  // Auto-crop black bars from video element
 };
 
 // ----------------------------------------------------------------------
@@ -1204,6 +1206,180 @@ const WebGLEngine = (() => {
 
 
 // ----------------------------------------------------------------------
+// LETTERBOX DETECTOR (Black Bar Detection)
+// ----------------------------------------------------------------------
+const LetterboxDetector = (() => {
+    const sampleCanvas = document.createElement('canvas');
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    const SAMPLE_W = 64;
+    const THRESHOLD = 30; // Brightness threshold for "black"
+
+    // --- Fast mode cache (for canvas crop, 500ms) ---
+    let fastCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
+    const FAST_TTL = 500;
+
+    // --- Stable mode state (for video crop, 5s, consensus) ---
+    const STABLE_TTL = 5000;
+    const TOLERANCE_PCT = 5;       // % of frame height — changes smaller than this are noise
+    const CONSENSUS_COUNT = 3;     // Need N agreeing samples before adopting
+    const MIN_BAR_PCT = 8;         // Bars must be ≥8% of frame to count as real letterbox
+    let stableCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
+    let stableLocked = null;       // The currently locked (applied) crop values
+    let sampleHistory = [];        // Ring buffer of raw scan results
+
+    // Core scan: returns raw {top, bottom} in original video coordinates
+    function rawScan(video) {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (!vw || !vh) return { top: 0, bottom: vh, sourceH: vh };
+
+        const sampleH = Math.round((vh / vw) * SAMPLE_W);
+        if (sampleCanvas.width !== SAMPLE_W) sampleCanvas.width = SAMPLE_W;
+        if (sampleCanvas.height !== sampleH) sampleCanvas.height = sampleH;
+
+        try {
+            sampleCtx.drawImage(video, 0, 0, SAMPLE_W, sampleH);
+        } catch (e) {
+            return { top: 0, bottom: vh, sourceH: vh };
+        }
+
+        const imgData = sampleCtx.getImageData(0, 0, SAMPLE_W, sampleH).data;
+
+        // Scan from top
+        let topRow = 0;
+        for (let y = 0; y < sampleH; y++) {
+            let rowBrightness = 0;
+            for (let x = 0; x < SAMPLE_W; x++) {
+                const i = (y * SAMPLE_W + x) * 4;
+                rowBrightness += (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+            }
+            rowBrightness /= SAMPLE_W;
+            if (rowBrightness > THRESHOLD) {
+                topRow = y;
+                break;
+            }
+            if (y === sampleH - 1) topRow = 0;
+        }
+
+        // Scan from bottom
+        let bottomRow = sampleH;
+        for (let y = sampleH - 1; y >= topRow; y--) {
+            let rowBrightness = 0;
+            for (let x = 0; x < SAMPLE_W; x++) {
+                const i = (y * SAMPLE_W + x) * 4;
+                rowBrightness += (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+            }
+            rowBrightness /= SAMPLE_W;
+            if (rowBrightness > THRESHOLD) {
+                bottomRow = y + 1;
+                break;
+            }
+        }
+
+        const scale = vh / sampleH;
+        return {
+            top: Math.floor(topRow * scale),
+            bottom: Math.ceil(bottomRow * scale),
+            sourceH: vh
+        };
+    }
+
+    // Fast detection (canvas crop) — low latency, 500ms cache
+    function detect(video) {
+        const now = performance.now();
+        if (now - fastCache.timestamp < FAST_TTL && fastCache.sourceH === video.videoHeight) {
+            return fastCache;
+        }
+        const result = rawScan(video);
+        fastCache = { ...result, timestamp: now };
+        return result;
+    }
+
+    // Stable detection (video crop) — 5s intervals, consensus-based
+    function detectStable(video) {
+        const now = performance.now();
+        const vh = video.videoHeight;
+
+        // Return locked value if within TTL
+        if (now - stableCache.timestamp < STABLE_TTL && stableCache.sourceH === vh && stableLocked) {
+            return stableLocked;
+        }
+
+        // Take a new sample
+        const sample = rawScan(video);
+        stableCache.timestamp = now;
+        stableCache.sourceH = vh;
+
+        // Add to history ring buffer
+        sampleHistory.push(sample);
+        if (sampleHistory.length > CONSENSUS_COUNT) {
+            sampleHistory.shift();
+        }
+
+        // Not enough samples yet — return current lock or no-crop
+        if (sampleHistory.length < CONSENSUS_COUNT) {
+            return stableLocked || { top: 0, bottom: vh, sourceH: vh };
+        }
+
+        // Check consensus: all samples must agree within tolerance
+        const tolerancePx = Math.round(vh * (TOLERANCE_PCT / 100));
+        const refTop = sampleHistory[0].top;
+        const refBottom = sampleHistory[0].bottom;
+        let consensus = true;
+
+        for (let i = 1; i < sampleHistory.length; i++) {
+            if (Math.abs(sampleHistory[i].top - refTop) > tolerancePx ||
+                Math.abs(sampleHistory[i].bottom - refBottom) > tolerancePx) {
+                consensus = false;
+                break;
+            }
+        }
+
+        if (!consensus) {
+            // Samples disagree — keep the current locked value
+            return stableLocked || { top: 0, bottom: vh, sourceH: vh };
+        }
+
+        // Consensus reached — compute averaged result
+        let avgTop = 0, avgBottom = 0;
+        for (const s of sampleHistory) {
+            avgTop += s.top;
+            avgBottom += s.bottom;
+        }
+        avgTop = Math.round(avgTop / sampleHistory.length);
+        avgBottom = Math.round(avgBottom / sampleHistory.length);
+        const barSize = avgTop + (vh - avgBottom);
+        const barPct = (barSize / vh) * 100;
+
+        // New result shows "no bars" but we previously had bars locked?
+        // Only release if bars are truly gone (below minimum %)
+        if (barPct < MIN_BAR_PCT && stableLocked && stableLocked.top > 0) {
+            // Bars disappeared — likely a dark scene, keep previous lock
+            return stableLocked;
+        }
+
+        // Bars are significant and consensus holds — adopt
+        if (barPct >= MIN_BAR_PCT) {
+            stableLocked = { top: avgTop, bottom: avgBottom, sourceH: vh };
+        } else {
+            // Genuinely no bars (first detection or video changed)
+            stableLocked = { top: 0, bottom: vh, sourceH: vh };
+        }
+
+        return stableLocked;
+    }
+
+    function reset() {
+        fastCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
+        stableCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
+        stableLocked = null;
+        sampleHistory = [];
+    }
+
+    return { detect, detectStable, reset };
+})();
+
+// ----------------------------------------------------------------------
 // MODERN (Single Canvas) - Global
 // ----------------------------------------------------------------------
 const ModernEngine = (() => {
@@ -1364,8 +1540,20 @@ const ModernEngine = (() => {
 
         if (sourceW === 0 || sourceH === 0) return;
 
+        // Letterbox detection — canvas uses fast mode, video uses stable mode
+        let cropTop = 0, cropBottom = sourceH;
+        if (config.cropCanvas && isVideo) {
+            const lb = LetterboxDetector.detect(renderSource);
+            cropTop = lb.top;
+            cropBottom = lb.bottom;
+        }
+
+        const cropH = cropBottom - cropTop;
+        const effectiveH = (config.cropCanvas && isVideo && cropH > 10) ? cropH : sourceH;
+        const effectiveTop = (config.cropCanvas && isVideo && cropH > 10) ? cropTop : 0;
+
         let targetW = config.resolution;
-        let targetH = Math.floor((sourceH / sourceW) * targetW);
+        let targetH = Math.floor((effectiveH / sourceW) * targetW);
         if (targetW < 1) targetW = 1;
         if (targetH < 1) targetH = 1;
 
@@ -1391,11 +1579,42 @@ const ModernEngine = (() => {
         if (canvasState.lastImageData) ctx.putImageData(canvasState.lastImageData, 0, 0);
         ctx.globalAlpha = effectiveAlpha;
         try {
-            ctx.drawImage(renderSource, 0, 0, targetW, targetH);
+            if (config.cropCanvas && isVideo && cropH > 10 && cropH < sourceH) {
+                // Draw only the content region (skip black bars)
+                ctx.drawImage(renderSource, 0, effectiveTop, sourceW, cropH, 0, 0, targetW, targetH);
+            } else {
+                ctx.drawImage(renderSource, 0, 0, targetW, targetH);
+            }
         } catch (e) {
             // video might be not ready or tainted
         }
         canvasState.lastImageData = ctx.getImageData(0, 0, targetW, targetH);
+
+        // Video element crop — uses STABLE detection (5s consensus)
+        if (isVideo && renderSource) {
+            if (config.cropVideo) {
+                const vLb = LetterboxDetector.detectStable(renderSource);
+                const vCropH = vLb.bottom - vLb.top;
+                const vHasBars = vCropH > 10 && vCropH < sourceH;
+
+                if (vHasBars) {
+                    const topPct = (vLb.top / sourceH) * 100;
+                    const bottomPct = ((sourceH - vLb.bottom) / sourceH) * 100;
+                    const scaleFactor = sourceH / vCropH;
+
+                    renderSource.style.setProperty('object-fit', 'cover', 'important');
+                    renderSource.style.setProperty('clip-path', `inset(${topPct}% 0 ${bottomPct}% 0)`, 'important');
+                    renderSource.style.setProperty('transform', `scaleY(${scaleFactor.toFixed(4)})`, 'important');
+                    renderSource.style.setProperty('transform-origin', 'center center', 'important');
+                }
+            } else {
+                // Clean up: remove overrides
+                renderSource.style.removeProperty('object-fit');
+                renderSource.style.removeProperty('clip-path');
+                renderSource.style.removeProperty('transform');
+                renderSource.style.removeProperty('transform-origin');
+            }
+        }
 
         VisualizerManager.updateColor(ctx, targetW, targetH);
     }

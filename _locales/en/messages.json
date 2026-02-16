@@ -421,5 +421,17 @@
   },
   "platform_ytmusic": {
     "message": "🎵 YouTube Music"
+  },
+  "settings_crop_canvas": {
+    "message": "Crop Canvas only"
+  },
+  "tooltip_crop_canvas": {
+    "message": "Automatically detects and removes black bars from the reflection canvas."
+  },
+  "settings_crop_video": {
+    "message": "Crop Video (beta)"
+  },
+  "tooltip_crop_video": {
+    "message": "Automatically detects and removes black bars from the video player."
   }
 }

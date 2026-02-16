@@ -21,7 +21,6 @@
             text-align: center;
             font-size: 16px;
             color: #ddd;
-            margin-bottom: 20px;
             border-bottom: 1px solid #444;
             padding-bottom: 10px;
         }
@@ -150,7 +149,6 @@
             text-align: center;
             font-size: 10px;
             color: #666;
-            margin-top: 15px;
             padding-top: 10px;
         }
 
@@ -577,6 +575,21 @@
             <input type="range" id="resolution" min="10" max="1920" value="80">
         </div>
 
+        <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+            <span data-i18n="settings_crop_canvas" data-tooltip="tooltip_crop_canvas">Crop Canvas only</span>
+            <label class="switch">
+                <input type="checkbox" id="cropCanvas" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="checkbox-row">
+            <span data-i18n="settings_crop_video" data-tooltip="tooltip_crop_video">Crop Video (beta)</span>
+            <label class="switch">
+                <input type="checkbox" id="cropVideo">
+                <span class="slider"></span>
+            </label>
+        </div>
 
 
     </details>
@@ -647,7 +660,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.9.0 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.9.1 • <span data-i18n="ui_by">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>

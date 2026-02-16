@@ -146,7 +146,9 @@ const DEFAULT_CONFIG = {
     // Ambient Mode Defaults
     ambientMode: false,
     ambientScale: 110,
-    musicOnly: true
+    musicOnly: true,
+    cropCanvas: true,
+    cropVideo: false
 };
 
 // FILTER PRESETS
@@ -190,6 +192,8 @@ const els = {
     ambientScale: document.getElementById('ambientScale'),
     ambientSettings: document.getElementById('ambient-settings'),
     musicOnly: document.getElementById('musicOnly'),
+    cropCanvas: document.getElementById('cropCanvas'),
+    cropVideo: document.getElementById('cropVideo'),
     filterPreset: document.getElementById('filterPreset'),
     fpsBadge: document.getElementById('fps-badge'),
     resetBtn: document.getElementById('reset-btn')
@@ -298,6 +302,8 @@ function updateUI() {
     if (els.ambientMode) els.ambientMode.checked = config.ambientMode;
     if (els.ambientScale) els.ambientScale.value = config.ambientScale;
     if (els.musicOnly) els.musicOnly.checked = config.musicOnly;
+    if (els.cropCanvas) els.cropCanvas.checked = config.cropCanvas;
+    if (els.cropVideo) els.cropVideo.checked = config.cropVideo;
 
     // Toggle Groups
     const audioGroup = document.getElementById('audio-settings');
@@ -368,6 +374,8 @@ function updateConfigFromUI() {
     if (els.ambientScale) config.ambientScale = parseInt(els.ambientScale.value);
     if (els.webglActive) config.webglActive = els.webglActive.checked;
     if (els.musicOnly) config.musicOnly = els.musicOnly.checked;
+    if (els.cropCanvas) config.cropCanvas = els.cropCanvas.checked;
+    if (els.cropVideo) config.cropVideo = els.cropVideo.checked;
 
     // Call updateUI to handle visibility logic (or just duplicate it here for responsiveness)
     // It's cleaner to duplicate just the display parts or call a shared "updateVisibility" function.

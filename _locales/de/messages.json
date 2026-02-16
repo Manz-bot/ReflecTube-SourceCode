@@ -421,5 +421,17 @@
     },
     "platform_ytmusic": {
         "message": "🎵 YouTube Music"
+    },
+    "settings_crop_canvas": {
+        "message": "Nur Canvas zuschneiden"
+    },
+    "tooltip_crop_canvas": {
+        "message": "Erkennt und entfernt automatisch schwarze Balken von der Reflexionsleinwand."
+    },
+    "settings_crop_video": {
+        "message": "Video zuschneiden (beta)"
+    },
+    "tooltip_crop_video": {
+        "message": "Erkennt und entfernt automatisch schwarze Balken vom Videoplayer."
     }
 }
