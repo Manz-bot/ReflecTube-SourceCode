@@ -1037,3 +1037,18 @@ document.getElementById('rec-vq-enhancer')?.addEventListener('click', () => {
 document.getElementById('rec-ambient-light')?.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://chromewebstore.google.com/detail/ambient-light-for-youtube/paponcgjfojgemddooebbgniglhkajkj' });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const body = document.body;
+
+    // Escuchamos cuando la animación de CSS termina
+    body.addEventListener('animationend', (event) => {
+        // Verificamos que sea nuestra animación de apertura
+        if (event.animationName === 'openingWithBlur') {
+            // Eliminamos el estilo de filtro por completo
+            body.style.backdropFilter = 'unset';
+            body.style.webkitBackdropFilter = 'unset';
+            console.log("Animación terminada: Filtros eliminados para fijar tooltips.");
+        }
+    });
+});
