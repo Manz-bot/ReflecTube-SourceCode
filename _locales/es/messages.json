@@ -50,6 +50,9 @@
   "settings_reset": {
     "message": "Restablecer"
   },
+  "little_reset": {
+    "message": "Restablecer esto"
+  },
   "option_max": {
     "message": "Sí - Máximo"
   },

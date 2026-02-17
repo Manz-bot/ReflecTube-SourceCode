@@ -50,6 +50,9 @@
     "settings_reset": {
         "message": "Restaurer"
     },
+    "little_reset": {
+        "message": "Restaurer ceci"
+    },
     "option_max": {
         "message": "Oui - Maximum"
     },

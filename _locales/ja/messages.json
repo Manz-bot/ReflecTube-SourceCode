@@ -50,6 +50,9 @@
     "settings_reset": {
         "message": "復元"
     },
+    "little_reset": {
+        "message": "復元"
+    },
     "option_max": {
         "message": "はい - 最大"
     },

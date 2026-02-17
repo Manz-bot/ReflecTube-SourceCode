@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReflecTube Settings</title>
     <style>
+        @property --rt-popup-blur {
+            syntax: '<length>';
+            inherits: false;
+            initial-value: 10px;
+        }
+
+        @property --rt-popup-brightness {
+            syntax: '<number>';
+            inherits: false;
+            initial-value: 0;
+        }
+
+        :root {
+            --rt-popup-blur: 10px;
+            --rt-popup-brightness: 0;
+        }
+
         body {
             width: 320px;
             background-color: #202020;
@@ -14,6 +31,21 @@
             padding: 15px;
             margin: 0;
             user-select: none;
+            backdrop-filter: brightness(var(--rt-popup-brightness)) blur(var(--rt-popup-blur));
+            -webkit-backdrop-filter: brightness(var(--rt-popup-brightness)) blur(var(--rt-popup-blur));
+            animation: openingWithBlur 1.5s ease-out forwards;
+        }
+
+        @keyframes openingWithBlur {
+            from {
+                --rt-popup-blur: 10px;
+                --rt-popup-brightness: 0;
+            }
+
+            to {
+                --rt-popup-blur: 0px;
+                --rt-popup-brightness: 1;
+            }
         }
 
         h2 {
@@ -150,6 +182,7 @@
             font-size: 10px;
             color: #666;
             padding-top: 10px;
+            font-weight: bolder;
         }
 
         .warning-text {
@@ -247,6 +280,54 @@
         button:hover {
             opacity: 0.8;
         }
+
+        .reset-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 10px;
+            opacity: 0.3;
+            transition: opacity 0.2s, transform 0.5s;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .reset-icon:hover {
+            opacity: 1;
+            transform: rotate(60deg);
+        }
+
+        #fps-badge {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #4CAF50;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 10;
+        }
+
+        #profile-avatar {
+            animation: rotate 10s linear infinite;
+            transition: all 0.5s ease-in-out;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -o-user-select: none;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -258,7 +339,7 @@
 
     <!-- Welcome Message with Profile -->
     <div id="welcome-banner"
-        style="display: none; background: linear-gradient(135deg, rgb(26 26 46 / 70%) 0%, rgb(22 33 62 / 70%) 100%);; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        style="display: block;background: linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(22, 33, 62, 0.7) 100%);border-top-left-radius: 24px;border-top-right-radius: 24px;border-bottom-right-radius: 24px;border-bottom-left-radius: 24px;padding: 3px;margin-bottom: 15px;border: 1px solid rgb(51, 51, 51);box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 15px;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <img id="profile-avatar" src="" alt="Profile"
                 style="width: 42px; height: 42px; border-radius: 50%; border: 2px solid #ff0000; object-fit: cover; box-shadow: 0 2px 8px rgba(255,0,0,0.3);">
@@ -290,7 +371,10 @@
 
     <!-- Master Switch -->
     <div class="checkbox-row" style="margin-bottom: 20px; font-weight: bold;">
-        <span data-i18n="settings_extension_switch" data-tooltip="tooltip_master">Extension</span>
+        <span>
+            <span data-i18n="settings_extension_switch" data-tooltip="tooltip_master">Extension</span>
+            <span class="reset-icon" style="display: none;" data-key="masterSwitch">⚙️</span>
+        </span>
         <label class="switch">
             <input type="checkbox" id="masterSwitch">
             <span class="slider"></span>
@@ -351,7 +435,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_opacity" data-tooltip="tooltip_opacity">Opacity</span>
+                <span>
+                    <span data-i18n="settings_opacity" data-tooltip="tooltip_opacity">Opacity</span>
+                    <span class="reset-icon" data-key="opacity">⚙️</span>
+                </span>
                 <span id="val-opacity">100%</span>
             </div>
             <input type="range" id="opacity" min="0" max="100" value="100">
@@ -359,7 +446,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_blur" data-tooltip="tooltip_blur">Blur</span>
+                <span>
+                    <span data-i18n="settings_blur" data-tooltip="tooltip_blur">Blur</span>
+                    <span class="reset-icon" data-key="blur">⚙️</span>
+                </span>
                 <span id="val-blur">0px</span>
             </div>
             <input type="range" id="blur" min="0" max="50" value="0">
@@ -367,7 +457,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_saturation" data-tooltip="tooltip_saturation">Saturation</span>
+                <span>
+                    <span data-i18n="settings_saturation" data-tooltip="tooltip_saturation">Saturation</span>
+                    <span class="reset-icon" data-key="saturation">⚙️</span>
+                </span>
                 <span id="val-saturation">100%</span>
             </div>
             <input type="range" id="saturation" min="0" max="200" value="100">
@@ -375,7 +468,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_brightness" data-tooltip="tooltip_brightness">Brightness</span>
+                <span>
+                    <span data-i18n="settings_brightness" data-tooltip="tooltip_brightness">Brightness</span>
+                    <span class="reset-icon" data-key="brightness">⚙️</span>
+                </span>
                 <span id="val-brightness">100%</span>
             </div>
             <input type="range" id="brightness" min="0" max="200" value="100">
@@ -383,7 +479,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_contrast" data-tooltip="tooltip_contrast">Contrast</span>
+                <span>
+                    <span data-i18n="settings_contrast" data-tooltip="tooltip_contrast">Contrast</span>
+                    <span class="reset-icon" data-key="contrast">⚙️</span>
+                </span>
                 <span id="val-contrast">100%</span>
             </div>
             <input type="range" id="contrast" min="0" max="200" value="100">
@@ -391,7 +490,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_sepia" data-tooltip="tooltip_sepia">Sepia</span>
+                <span>
+                    <span data-i18n="settings_sepia" data-tooltip="tooltip_sepia">Sepia</span>
+                    <span class="reset-icon" data-key="sepia">⚙️</span>
+                </span>
                 <span id="val-sepia">0%</span>
             </div>
             <input type="range" id="sepia" min="0" max="100" value="0">
@@ -399,14 +501,20 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_invert" data-tooltip="tooltip_invert">Invert</span>
+                <span>
+                    <span data-i18n="settings_invert" data-tooltip="tooltip_invert">Invert</span>
+                    <span class="reset-icon" data-key="invert">⚙️</span>
+                </span>
                 <span id="val-invert">0%</span>
             </div>
             <input type="range" id="invert" min="0" max="100" value="0">
         </div>
 
         <div class="checkbox-row">
-            <span data-i18n="settings_hueloop" data-tooltip="tooltip_hueloop">Hue Loop Animation</span>
+            <span>
+                <span data-i18n="settings_hueloop" data-tooltip="tooltip_hueloop">Hue Loop Animation</span>
+                <span class="reset-icon" data-key="hueLoop">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="hueLoop">
                 <span class="slider"></span>
@@ -417,7 +525,10 @@
         <div style="border-top: 1px solid #444; margin-top: 10px; padding-top: 10px;">
             <div class="setting-group">
                 <div class="label-row">
-                    <span data-i18n="settings_sharpness" data-tooltip="tooltip_sharpness">Sharpness</span>
+                    <span>
+                        <span data-i18n="settings_sharpness" data-tooltip="tooltip_sharpness">Sharpness</span>
+                        <span class="reset-icon" data-key="sharpness">⚙️</span>
+                    </span>
                     <span id="val-sharpness">0%</span>
                 </div>
                 <input type="range" id="sharpness" min="0" max="100" value="0">
@@ -425,7 +536,10 @@
 
             <div class="setting-group">
                 <div class="label-row">
-                    <span data-i18n="settings_highlights" data-tooltip="tooltip_highlights">Highlights</span>
+                    <span>
+                        <span data-i18n="settings_highlights" data-tooltip="tooltip_highlights">Highlights</span>
+                        <span class="reset-icon" data-key="highlights">⚙️</span>
+                    </span>
                     <span id="val-highlights">100%</span>
                 </div>
                 <input type="range" id="highlights" min="50" max="150" value="100">
@@ -433,7 +547,10 @@
 
             <div class="setting-group">
                 <div class="label-row">
-                    <span data-i18n="settings_shadows" data-tooltip="tooltip_shadows">Shadows</span>
+                    <span>
+                        <span data-i18n="settings_shadows" data-tooltip="tooltip_shadows">Shadows</span>
+                        <span class="reset-icon" data-key="shadows">⚙️</span>
+                    </span>
                     <span id="val-shadows">100%</span>
                 </div>
                 <input type="range" id="shadows" min="50" max="150" value="100">
@@ -446,7 +563,10 @@
         <summary class="section-title" data-i18n="settings_effects_title">EFFECTS</summary>
 
         <div class="checkbox-row">
-            <span data-i18n="settings_audio_reactivity" data-tooltip="tooltip_audio">Audio Reactivity</span>
+            <span>
+                <span data-i18n="settings_audio_reactivity" data-tooltip="tooltip_audio">Audio Reactivity</span>
+                <span class="reset-icon" data-key="audioEnabled">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="audioEnabled">
                 <span class="slider"></span>
@@ -456,14 +576,20 @@
         <div id="audio-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
-                <span data-i18n="settings_audio_sensitivity" data-tooltip="tooltip_sensitivity">Audio
-                    Sensitivity</span>
+                <span>
+                    <span data-i18n="settings_audio_sensitivity" data-tooltip="tooltip_sensitivity">Audio
+                        Sensitivity</span>
+                    <span class="reset-icon" data-key="sensitivity">⚙️</span>
+                </span>
                 <span id="val-sensitivity">50</span>
             </div>
             <input type="range" id="sensitivity" min="0" max="100" value="50">
 
             <div class="checkbox-row" style="margin-top: 8px;">
-                <span data-i18n="settings_music_only" data-tooltip="tooltip_music_only">Music Videos Only</span>
+                <span>
+                    <span data-i18n="settings_music_only" data-tooltip="tooltip_music_only">Music Videos Only</span>
+                    <span class="reset-icon" data-key="musicOnly">⚙️</span>
+                </span>
                 <label class="switch">
                     <input type="checkbox" id="musicOnly">
                     <span class="slider"></span>
@@ -472,7 +598,10 @@
         </div>
 
         <div class="checkbox-row" style="margin-top: 10px;">
-            <span data-i18n="settings_ambient_mode" data-tooltip="tooltip_ambient_mode">Ambient Mode</span>
+            <span>
+                <span data-i18n="settings_ambient_mode" data-tooltip="tooltip_ambient_mode">Ambient Mode</span>
+                <span class="reset-icon" data-key="ambientMode">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="ambientMode">
                 <span class="slider"></span>
@@ -482,14 +611,20 @@
         <div id="ambient-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
-                <span data-i18n="settings_ambient_size" data-tooltip="tooltip_ambient_size">Ambient Scale (%)</span>
+                <span>
+                    <span data-i18n="settings_ambient_size" data-tooltip="tooltip_ambient_size">Ambient Scale (%)</span>
+                    <span class="reset-icon" data-key="ambientScale">⚙️</span>
+                </span>
                 <span id="val-ambientScale">100%</span>
             </div>
             <input type="range" id="ambientScale" min="50" max="200" value="100">
         </div>
 
         <div class="checkbox-row" style="margin-top: 10px;">
-            <span data-i18n="settings_camera_shake" data-tooltip="tooltip_camerashake">Camera Shake</span>
+            <span>
+                <span data-i18n="settings_camera_shake" data-tooltip="tooltip_camerashake">Camera Shake</span>
+                <span class="reset-icon" data-key="cameraShake">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="cameraShake">
                 <span class="slider"></span>
@@ -499,14 +634,20 @@
         <div id="camera-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
-                <span data-i18n="settings_camera_intensity" data-tooltip="tooltip_cameraintensity">Intensity</span>
+                <span>
+                    <span data-i18n="settings_camera_intensity" data-tooltip="tooltip_cameraintensity">Intensity</span>
+                    <span class="reset-icon" data-key="cameraIntensity">⚙️</span>
+                </span>
                 <span id="val-cameraIntensity">Medium</span>
             </div>
             <input type="range" id="cameraIntensity" min="0" max="100" value="50">
         </div>
 
         <div class="checkbox-row">
-            <span data-i18n="settings_visualizer_color" data-tooltip="tooltip_visualizer">Audio Visualizer</span>
+            <span>
+                <span data-i18n="settings_visualizer_color" data-tooltip="tooltip_visualizer">Audio Visualizer</span>
+                <span class="reset-icon" data-key="visualizerActive">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="visualizerActive">
                 <span class="slider"></span>
@@ -516,7 +657,10 @@
         <div id="visualizer-settings" class="setting-group"
             style="display:none; padding-left: 10px; border-left: 2px solid #555;">
             <div class="label-row">
-                <span data-i18n="settings_visualizer_type" data-tooltip="tooltip_visualizer_type">Style</span>
+                <span>
+                    <span data-i18n="settings_visualizer_type" data-tooltip="tooltip_visualizer_type">Style</span>
+                    <span class="reset-icon" data-key="visualizerType">⚙️</span>
+                </span>
             </div>
             <select id="visualizerType"
                 style="width: 100%; background:#333; color:white; border:1px solid #444; padding:6px; border-radius:4px; margin-top: 5px;">
@@ -527,7 +671,10 @@
             </select>
         </div>
         <div class="checkbox-row">
-            <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Prioritize Performance</span>
+            <span>
+                <span data-i18n="settings_pointer_follow" data-tooltip="tooltip_pointer">Prioritize Performance</span>
+                <span class="reset-icon" data-key="pointerActive">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="pointerActive">
                 <span class="slider"></span>
@@ -535,7 +682,10 @@
         </div>
 
         <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
-            <span data-i18n="settings_webgl" data-tooltip="tooltip_webgl">WebGL Renderer (GPU)</span>
+            <span>
+                <span data-i18n="settings_webgl" data-tooltip="tooltip_webgl">WebGL Renderer (GPU)</span>
+                <span class="reset-icon" data-key="webglActive">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="webglActive">
                 <span class="slider"></span>
@@ -545,15 +695,19 @@
 
     <!-- System -->
     <details class="section-group">
-        <summary class="section-title" data-i18n="settings_system_title">SYSTEM
-            <span id="fps-badge"
-                style="margin-left: auto; font-size: 10px; background: #2a2a2a; padding: 2px 8px; border-radius: 10px; color: #4CAF50; font-weight: bold; letter-spacing: 0.5px;">--
-                FPS</span>
+        <summary class="section-title" style="display: flex; align-items: center;">
+            <span data-i18n="settings_system_title">SYSTEM</span>
+            <span id="fps-badge" style="display:block">
+                -- FPS
+            </span>
         </summary>
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_framerate" data-tooltip="tooltip_framerate">Frame Rate (ms)</span>
+                <span>
+                    <span data-i18n="settings_framerate" data-tooltip="tooltip_framerate">Frame Rate (ms)</span>
+                    <span class="reset-icon" data-key="framerate">⚙️</span>
+                </span>
                 <span id="val-framerate">30ms</span>
             </div>
             <input type="range" id="framerate" min="10" max="100" value="30" step="5">
@@ -561,7 +715,10 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_smoothness" data-tooltip="tooltip_smoothness">Smoothness</span>
+                <span>
+                    <span data-i18n="settings_smoothness" data-tooltip="tooltip_smoothness">Smoothness</span>
+                    <span class="reset-icon" data-key="smoothness">⚙️</span>
+                </span>
                 <span id="val-smoothness">60</span>
             </div>
             <input type="range" id="smoothness" min="0" max="95" value="60">
@@ -569,14 +726,20 @@
 
         <div class="setting-group">
             <div class="label-row">
-                <span data-i18n="settings_resolution" data-tooltip="tooltip_resolution">Resolution (Px)</span>
+                <span>
+                    <span data-i18n="settings_resolution" data-tooltip="tooltip_resolution">Resolution (Px)</span>
+                    <span class="reset-icon" data-key="resolution">⚙️</span>
+                </span>
                 <span id="val-resolution">80px</span>
             </div>
             <input type="range" id="resolution" min="10" max="1920" value="80">
         </div>
 
         <div class="checkbox-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
-            <span data-i18n="settings_crop_canvas" data-tooltip="tooltip_crop_canvas">Crop Canvas only</span>
+            <span>
+                <span data-i18n="settings_crop_canvas" data-tooltip="tooltip_crop_canvas">Crop Canvas only</span>
+                <span class="reset-icon" data-key="cropCanvas">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="cropCanvas" checked>
                 <span class="slider"></span>
@@ -584,7 +747,10 @@
         </div>
 
         <div class="checkbox-row">
-            <span data-i18n="settings_crop_video" data-tooltip="tooltip_crop_video">Crop Video (beta)</span>
+            <span>
+                <span data-i18n="settings_crop_video" data-tooltip="tooltip_crop_video">Crop Video (beta)</span>
+                <span class="reset-icon" data-key="cropVideo">⚙️</span>
+            </span>
             <label class="switch">
                 <input type="checkbox" id="cropVideo">
                 <span class="slider"></span>
@@ -660,7 +826,7 @@
     </div> <!-- End Main Settings Container -->
 
     <div class="footer">
-        v0.9.1 • <span data-i18n="ui_by">By Manzbot & Community</span>
+        v0.9.2 • <span data-i18n="ui_by" style="font-weight: normal;">By Manzbot & Community</span>
     </div>
 
     <script src="rt-popup.js"></script>

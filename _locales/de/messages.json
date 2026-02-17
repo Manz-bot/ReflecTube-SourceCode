@@ -50,6 +50,9 @@
     "settings_reset": {
         "message": "Wiederherstellen"
     },
+    "little_reset": {
+        "message": "Wiederherstellen"
+    },
     "option_max": {
         "message": "Ja - Maximum"
     },

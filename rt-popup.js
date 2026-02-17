@@ -459,9 +459,9 @@ localizeHtml();
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (!tabs[0]) return;
             chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_FPS' }, (response) => {
+                console.log("FPS: " + response?.fps);
                 if (chrome.runtime.lastError || !response) {
-                    badge.textContent = '-- FPS';
-                    badge.style.color = '#666';
+                    badge.style.display = 'none';
                     return;
                 }
                 const fps = response.fps || 0;
@@ -660,6 +660,47 @@ Object.keys(els).forEach(key => {
             }
         });
     }
+});
+
+// Reset Icons Handler
+document.querySelectorAll('.reset-icon').forEach(icon => {
+    icon.addEventListener('click', (e) => {
+        const key = icon.getAttribute('data-key');
+        if (DEFAULT_CONFIG.hasOwnProperty(key)) {
+            // Reset to default
+            config[key] = DEFAULT_CONFIG[key];
+
+            // Update UI
+            if (els[key]) {
+                if (els[key].type === 'checkbox') {
+                    els[key].checked = config[key];
+                } else {
+                    els[key].value = config[key];
+                }
+                // Trigger input event to update label values (e.g. 100%)
+                els[key].dispatchEvent(new Event('input'));
+            }
+
+            // Update storage
+            saveAndNotify();
+
+            // Visual feedback
+            icon.style.opacity = '1';
+            icon.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                icon.style.opacity = '';
+                icon.style.transform = '';
+            }, 500);
+        }
+    });
+    // AÑADIR TOOLTIP QUE DIGA "RESET"
+    icon.addEventListener('mouseenter', (e) => {
+        const key = 'little_reset';
+        const text = chrome.i18n.getMessage(key);
+        if (text) showTooltip(e, text);
+    });
+    icon.addEventListener('mouseleave', hideTooltip);
+    icon.addEventListener('mousemove', moveTooltip);
 });
 
 // ----------------------------------------------------------------------

@@ -48,47 +48,7 @@ if (chrome.storage && chrome.storage.sync) {
 }
 
 // Listen for updates
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'UPDATE_SETTINGS') {
-        const oldAmbient = config.ambientMode;
-        config = { ...config, ...request.payload };
-
-        applyGlobalStyles();
-
-        // Handle Master Switch Toggle
-        const container = document.getElementById('rt-container');
-        if (container) {
-            // But basic visibility:
-            container.style.display = config.masterSwitch ? 'flex' : 'none';
-        }
-
-        // Pointer Update
-        PointerManager.updateState();
-
-        // Visualizer Update
-        VisualizerManager.updateState();
-
-        // Ensure Audio is Ready if newly enabled
-        if (isAudioActive() || config.visualizerActive) {
-            AudioManager.resume();
-        }
-
-        // Handle Mode Switch or Re-init
-        if (config.ambientMode !== oldAmbient) {
-            restartEngine();
-        } else {
-            // Live update for active engine if needed
-            if (config.ambientMode && AmbientEngine.isActive()) {
-                AmbientEngine.updateConfig();
-            }
-        }
-    }
-
-    if (request.type === 'GET_FPS') {
-        sendResponse({ fps: ModernEngine.getFps ? ModernEngine.getFps() : 0 });
-        return true;
-    }
-});
+// Listener moved to end of file to ensure ModernEngine is initialized
 
 // ----------------------------------------------------------------------
 // MUSIC VIDEO DETECTION
@@ -1283,15 +1243,64 @@ const LetterboxDetector = (() => {
             sourceH: vh
         };
     }
+    // --- Fast mode with hold logic (for canvas crop) ---
+    const FAST_HOLD = 2000;        // Hold locked crop for 2s before allowing "no bars"
+    const FAST_TOLERANCE_PCT = 3;  // % tolerance for crop jitter
+    const FAST_MIN_BAR_PCT = 8;    // Bars must be ≥8% of frame to count
+    let fastLocked = null;         // Currently locked crop for canvas
+    let fastNoBarsStart = 0;       // Timestamp when "no bars" was first seen
 
-    // Fast detection (canvas crop) — low latency, 500ms cache
+    // Fast detection (canvas crop) — 500ms cache, with hold to prevent flicker
     function detect(video) {
         const now = performance.now();
         if (now - fastCache.timestamp < FAST_TTL && fastCache.sourceH === video.videoHeight) {
-            return fastCache;
+            return fastLocked || fastCache;
         }
+
         const result = rawScan(video);
         fastCache = { ...result, timestamp: now };
+        const vh = result.sourceH;
+        const barSize = result.top + (vh - result.bottom);
+        const barPct = (barSize / vh) * 100;
+        const hasBars = barPct >= FAST_MIN_BAR_PCT;
+
+        // First detection: no lock yet
+        if (!fastLocked) {
+            if (hasBars) {
+                fastLocked = result;
+                fastNoBarsStart = 0;
+            }
+            return fastLocked || result;
+        }
+
+        // We have a locked value — check if the new scan agrees
+        if (hasBars) {
+            // Bars detected: check if they're within tolerance of the lock
+            const tolerancePx = Math.round(vh * (FAST_TOLERANCE_PCT / 100));
+            if (Math.abs(result.top - fastLocked.top) <= tolerancePx &&
+                Math.abs(result.bottom - fastLocked.bottom) <= tolerancePx) {
+                // Within tolerance — keep the lock as-is (no jitter)
+                fastNoBarsStart = 0;
+                return fastLocked;
+            }
+            // Bars but different position — adopt new values (aspect ratio changed?)
+            fastLocked = result;
+            fastNoBarsStart = 0;
+            return fastLocked;
+        }
+
+        // No bars detected — might be a dark scene, hold the lock
+        if (fastNoBarsStart === 0) {
+            fastNoBarsStart = now;  // Start the hold timer
+        }
+        if (now - fastNoBarsStart < FAST_HOLD) {
+            // Still within hold period — keep locked crop
+            return fastLocked;
+        }
+
+        // Hold expired — genuinely no bars, release the lock
+        fastLocked = null;
+        fastNoBarsStart = 0;
         return result;
     }
 
@@ -1371,6 +1380,8 @@ const LetterboxDetector = (() => {
 
     function reset() {
         fastCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
+        fastLocked = null;
+        fastNoBarsStart = 0;
         stableCache = { top: 0, bottom: 0, sourceH: 0, timestamp: 0 };
         stableLocked = null;
         sampleHistory = [];
@@ -1549,11 +1560,12 @@ const ModernEngine = (() => {
         }
 
         const cropH = cropBottom - cropTop;
-        const effectiveH = (config.cropCanvas && isVideo && cropH > 10) ? cropH : sourceH;
-        const effectiveTop = (config.cropCanvas && isVideo && cropH > 10) ? cropTop : 0;
+        const isCropping = config.cropCanvas && isVideo && cropH > 10 && cropH < sourceH;
 
+        // Canvas dimensions: always based on FULL source size to prevent
+        // dimension thrashing when crop values fluctuate (which kills smoothness)
         let targetW = config.resolution;
-        let targetH = Math.floor((effectiveH / sourceW) * targetW);
+        let targetH = Math.floor((sourceH / sourceW) * targetW);
         if (targetW < 1) targetW = 1;
         if (targetH < 1) targetH = 1;
 
@@ -1579,9 +1591,9 @@ const ModernEngine = (() => {
         if (canvasState.lastImageData) ctx.putImageData(canvasState.lastImageData, 0, 0);
         ctx.globalAlpha = effectiveAlpha;
         try {
-            if (config.cropCanvas && isVideo && cropH > 10 && cropH < sourceH) {
-                // Draw only the content region (skip black bars)
-                ctx.drawImage(renderSource, 0, effectiveTop, sourceW, cropH, 0, 0, targetW, targetH);
+            if (isCropping) {
+                // Draw only the content region (skip black bars) into the full canvas
+                ctx.drawImage(renderSource, 0, cropTop, sourceW, cropH, 0, 0, targetW, targetH);
             } else {
                 ctx.drawImage(renderSource, 0, 0, targetW, targetH);
             }
@@ -1923,3 +1935,50 @@ const AmbientEngine = (() => {
 
     return { start, stop, isActive, updateConfig };
 })();
+
+// Listen for messages from popup (Ensures ModernEngine and AmbientEngine are initialized)
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === 'UPDATE_SETTINGS') {
+        const oldAmbient = config.ambientMode;
+        config = { ...config, ...request.payload };
+
+        applyGlobalStyles();
+
+        // Handle Master Switch Toggle
+        const container = document.getElementById('rt-container');
+        if (container) {
+            container.style.display = config.masterSwitch ? 'flex' : 'none';
+        }
+
+        // Pointer Update
+        if (typeof PointerManager !== 'undefined') PointerManager.updateState();
+
+        // Visualizer Update
+        if (typeof VisualizerManager !== 'undefined') VisualizerManager.updateState();
+
+        // Ensure Audio is Ready if newly enabled
+        if (isAudioActive() || config.visualizerActive) {
+            AudioManager.resume();
+        }
+
+        // Handle Mode Switch or Re-init
+        if (config.ambientMode !== oldAmbient) {
+            restartEngine();
+        } else {
+            // Live update for active engine if needed
+            if (config.ambientMode && AmbientEngine.isActive()) {
+                AmbientEngine.updateConfig();
+            }
+        }
+    }
+
+    if (request.type === 'GET_FPS') {
+        // ModernEngine is guaranteed to be defined because this listener is at the end
+        try {
+            const fps = (typeof ModernEngine !== 'undefined' && ModernEngine.getFps) ? ModernEngine.getFps() : 0;
+            sendResponse({ fps: fps });
+        } catch (e) {
+            sendResponse({ fps: 0 });
+        }
+    }
+});
