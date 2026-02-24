@@ -6,7 +6,7 @@
 
   **Transform Your YouTube Experience with Immersive Reflections & Visuals**
 
-  [![Version](https://img.shields.io/badge/version-0.9.2-blue.svg?style=for-the-badge)](https://github.com/yourusername/reflectube)
+  [![Version](https://img.shields.io/badge/version-0.9.3-blue.svg?style=for-the-badge)](https://github.com/yourusername/reflectube)
   [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange.svg?style=for-the-badge)](https://developer.chrome.com/docs/extensions/mv3/intro/)
   [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 

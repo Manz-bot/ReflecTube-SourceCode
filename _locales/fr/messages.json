@@ -363,7 +363,7 @@
         "message": "Activer l'accélération GPU expérimentale pour des effets de distorsion liquide."
     },
     "welcome_profile": {
-        "message": "Profil"
+        "message": "['Joyeux Janvier', 'Joyeux Février', 'Joyeux Mars', 'Joyeux Avril', 'Joyeux Mai', 'Joyeux Juin', 'Joyeux Juillet', 'Joyeux Août', 'Joyeux Septembre', 'Joyeux Octobre', 'Joyeux Novembre', 'Joyeux Décembre']"
     },
     "welcome_greeting": {
         "message": "Bonjour, {name} !"
@@ -436,5 +436,8 @@
     },
     "tooltip_crop_video": {
         "message": "Détecte et supprime automatiquement les bandes noires du lecteur vidéo."
+    },
+    "native_ambient_mode_disabled": {
+        "message": "ReflecTube: Pour que ce message n'apparaisse plus, désactivez le mode Ambiant natif ou l'éclairage cinématique de YouTube dans les paramètres du lecteur.\n\nLe mode Ambiant natif de YouTube a été masqué/supprimé pour le moment afin d'éviter les conflits et le cadre noir dans ReflecTube."
     }
 }

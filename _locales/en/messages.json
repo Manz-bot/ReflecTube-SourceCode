@@ -363,7 +363,7 @@
     "message": "Enable experimental GPU acceleration for liquid distortion effects."
   },
   "welcome_profile": {
-    "message": "Profile"
+    "message": "['Happy January', 'Happy February', 'Happy March', 'Happy April', 'Happy May', 'Happy June', 'Happy July', 'Happy August', 'Happy September', 'Happy October', 'Happy November', 'Happy December']"
   },
   "welcome_greeting": {
     "message": "Hello, {name}!"
@@ -436,5 +436,8 @@
   },
   "tooltip_crop_video": {
     "message": "Automatically detects and removes black bars from the video player."
+  },
+  "native_ambient_mode_disabled": {
+    "message": "ReflecTube: To prevent this message from appearing again, disable the native Ambient Mode or Cinematic Lighting in the player settings.\n\nThe native Ambient Mode of YouTube has been hidden/removed for now to avoid conflicts and the black box in ReflecTube."
   }
 }

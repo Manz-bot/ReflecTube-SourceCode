@@ -363,7 +363,7 @@
         "message": "Experimentelle GPU-Beschleunigung für Flüssigkeitsverzerrungseffekte aktivieren."
     },
     "welcome_profile": {
-        "message": "Profil"
+        "message": "['Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten', 'Frohe Weihnachten']"
     },
     "welcome_greeting": {
         "message": "Hallo, {name}!"
@@ -436,5 +436,8 @@
     },
     "tooltip_crop_video": {
         "message": "Erkennt und entfernt automatisch schwarze Balken vom Videoplayer."
+    },
+    "native_ambient_mode_disabled": {
+        "message": "ReflecTube: Um zu verhindern, dass diese Meldung erneut angezeigt wird, deaktivieren Sie den nativen Umgebungsmodus oder die filmische Beleuchtung von YouTube in den Einstellungen des Players.\n\nDer native Umgebungsmodus von YouTube wurde vorerst ausgeblendet/entfernt, um Konflikte und das schwarze Rechteck in ReflecTube zu vermeiden."
     }
 }

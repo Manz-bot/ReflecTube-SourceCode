@@ -783,3 +783,10 @@ ytd-engagement-panel-section-list-renderer div#content {
 div#i1[role="listbox"] {
     background-color: color-mix(in srgb, var(--yt-spec-base-background), transparent 50%) !important;
 }
+
+/* Hide ambient mode native canvas */
+ytd-player[ambient-mode] canvas,
+#cinematics canvas,
+#shorts-cinematic-container canvas {
+    display: none !important;
+}

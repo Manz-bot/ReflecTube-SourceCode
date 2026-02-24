@@ -8,8 +8,17 @@ chrome.action.setBadgeText({ text: '' });
 // ----------------------------------------------------------------------
 (async function loadUserProfile() {
     const welcomeBanner = document.getElementById('welcome-banner');
+    const welcomeProfile = document.getElementById('welcome-profile');
     const profileAvatar = document.getElementById('profile-avatar');
     const profileGreeting = document.getElementById('profile-greeting');
+
+    if (welcomeProfile) {
+        const mesesString = chrome.i18n.getMessage("welcome_profile") || "['Happy January', 'Happy February', 'Happy March', 'Happy April', 'Happy May', 'Happy June', 'Happy July', 'Happy August', 'Happy September', 'Happy October', 'Happy November', 'Happy December']";
+        const mesesArray = JSON.parse(mesesString.replace(/'/g, '"'));
+        const indiceMes = new Date().getMonth();
+        const saludo = mesesArray[indiceMes] + " " + new Date().getFullYear();
+        welcomeProfile.textContent = saludo;
+    }
 
     if (!welcomeBanner || !profileAvatar || !profileGreeting) return;
 
@@ -35,58 +44,66 @@ chrome.action.setBadgeText({ text: '' });
 
         welcomeBanner.style.display = 'block';
     }
-    // Try Content Script Scraping from Google tabs
     try {
-        const tabs = await chrome.tabs.query({ url: ["https://*.youtube.com/*", "https://*.google.com/*"] });
+        const userInfo = await chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' });
+        if (userInfo && userInfo.email) {
+            userName = userInfo.email.split('@')[0];
+        }
+    } catch (e) {
+        console.warn("Could not fetch identity info", e);
+    }
 
+    // Try Content Script Scraping from YouTube tabs just for the profile picture
+    try {
+        const tabs = await chrome.tabs.query({ url: ["https://*.youtube.com/*"] });
 
         for (const tab of tabs) {
             try {
                 const results = await chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     func: () => {
-                        const selectors = [
-                            "img.yt-img-shadow",
-                            'img[alt="Profile"]', // Gmail
-                            'img[data-src*="googleusercontent"]', // Search
-                            '.gb_ua.gbii', // Alternate Gmail
-                            'gb_Q.gbii',
-                            'img[alt*="Profile"]', // Generic
-                            'img[src*="googleusercontent.com"]' // Any Google user content
-                        ];
+                        let picture = null;
 
-                        for (const selector of selectors) {
-                            const img = document.querySelector(selector);
-                            if (img && img.src && (img.src.includes('yt3.ggpht.com') || img.src.includes('googleusercontent'))) {
-                                const parent = img.closest('a[aria-label]');
-                                let name = null;
-                                if (parent) {
-                                    const label = parent.getAttribute('aria-label');
-                                    // Extract name: "Google Account: John Doe" -> "John Doe"
-                                    const match = label.match(/:\s*(.+?)(?:\s*\(|$)/);
-                                    if (document.querySelectorAll('#display-name')[0]) {
-                                        name = document.querySelectorAll('#display-name')[0].textContent
-                                    } else if (match) {
-                                        name = match[1].trim()
+                        // 1. Try extracting from ytInitialData
+                        try {
+                            const scripts = document.querySelectorAll('script');
+                            for (let script of scripts) {
+                                if (script.textContent.includes('ytInitialData')) {
+                                    // Match profile picture URL
+                                    const picMatch = script.textContent.match(/"url"\s*:\s*"([^"]+yt3\.ggpht\.com[^"]+)"/);
+                                    if (picMatch) {
+                                        picture = picMatch[1];
+                                        break;
                                     }
                                 }
-                                return {
-                                    picture: img.src.replace(/=s\d+-/, '=s128-'),
-                                    name: name
-                                };
                             }
+                        } catch (e) { }
+
+                        // 2. Fallback to DOM elements
+                        if (!picture) {
+                            const img = document.querySelector('#avatar-btn img') ||
+                                document.querySelector('img.yt-core-image.yt-core-avatar-custom-image') ||
+                                document.querySelector('yt-img-shadow img');
+
+                            if (img && img.src && (img.src.includes('yt3.ggpht.com') || img.src.includes('googleusercontent'))) {
+                                picture = img.src;
+                            }
+                        }
+
+                        if (picture) {
+                            return {
+                                picture: picture.replace(/=s\d+-/, '=s128-')
+                            };
                         }
                         return null;
                     }
                 });
 
                 if (results && results[0] && results[0].result) {
-                    const { picture, name } = results[0].result;
-                    userPicture = picture;
-                    userName = name;
-                    if (userPicture || userName) {
-                        showWelcome(userName || "🎵", userPicture);
-                        return;
+                    const { picture } = results[0].result;
+                    if (picture) {
+                        userPicture = picture;
+                        break;
                     }
                 }
             } catch (tabError) {
@@ -96,26 +113,44 @@ chrome.action.setBadgeText({ text: '' });
     } catch (e) {
         console.log("Content script scraping failed:", e);
     }
+
+    if (userPicture || userName) {
+        showWelcome(userName || "🎵", userPicture);
+    }
 })();
 
 //WALLPAPER DEL POPUP
+function getBingWallpaper() {
+    fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&mkt=en-US')
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            if (!data.images || !data.images.length) throw new Error('No images in response');
+            const fondos = data.images.map(img => `https://www.bing.com${img.url}`);
+            const randIndex = Math.floor(Math.random() * fondos.length);
+            chrome.storage.sync.set({ fondosDiarios: fondos });
+            document.body.style.backgroundImage = `linear-gradient(rgba(155 ,0,0,.3), rgba(0,0,0,.7)), url('${fondos[randIndex]}')`;
+        })
+        .catch(() => {
+            document.body.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+        });
+}
+
 document.body.style.backgroundPosition = "center";
 document.body.style.backgroundSize = "cover";
-fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&mkt=en-US')
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-    })
-    .then(data => {
-        if (!data.images || !data.images.length) throw new Error('No images in response');
-        const fondos = data.images.map(img => `https://www.bing.com${img.url}`);
-        const randIndex = Math.floor(Math.random() * fondos.length);
-        chrome.storage.sync.set({ fondosDiarios: fondos });
-        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)), url('${fondos[randIndex]}')`;
-    })
-    .catch(() => {
-        document.body.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+document.body.style.backgroundAttachment = "fixed";
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (!tabs[0]) return getBingWallpaper();
+    chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_VIDEO_THUMBNAIL' }, (response) => {
+        console.log("Thumbnail: " + response?.thumbnail);
+        if (chrome.runtime.lastError || !response || !response.thumbnail) {
+            return getBingWallpaper();
+        }
+        document.body.style.backgroundImage = `linear-gradient(rgba(155 ,0,0,.3), rgba(0,0,0,.7)), url('${response.thumbnail}')`;
     });
+});
 
 // CONFIG
 const DEFAULT_CONFIG = {
@@ -557,7 +592,6 @@ const MANIFEST_URL = `https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH
     try {
         const localManifest = chrome.runtime.getManifest();
         const localVersion = localManifest.version;
-        console.log(MANIFEST_URL);
         const response = await fetch(MANIFEST_URL);
         if (response.ok) {
             const remoteManifest = await response.json();

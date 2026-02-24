@@ -363,7 +363,7 @@
     "message": "Habilita la aceleración por GPU para efectos de distorsión líquida (Experimental)."
   },
   "welcome_profile": {
-    "message": "Perfil"
+    "message": "['Felíz Enero', 'Felíz Febrero', 'Felíz Marzo', 'Felíz Abril', 'Felíz Mayo', 'Felíz Junio', 'Felíz Julio', 'Felíz Agosto', 'Felíz Septiembre', 'Felíz Octubre', 'Felíz Noviembre', 'Felíz Diciembre']"
   },
   "welcome_greeting": {
     "message": "¡Hola, {name}!"
@@ -436,5 +436,8 @@
   },
   "tooltip_crop_video": {
     "message": "Detecta y elimina automáticamente los bordes negros del reproductor de video."
+  },
+  "native_ambient_mode_disabled": {
+    "message": "ReflecTube: Para que no le aparezca nuevamente este mensaje, desactive el Modo Ambiente o Iluminación cinematográfica nativos de YouTube en la configuración del reproductor.\n\nDe momento, ha sido ocultado/eliminado para evitar conflictos y el recuadro negro en ReflecTube."
   }
 }

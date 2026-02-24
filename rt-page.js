@@ -173,7 +173,58 @@ function init() {
     injectVideoQualityFilters(); // Inject SVG filters for video enhancement
     PointerManager.init();
     VisualizerManager.init();
+    disableNativeAmbientMode();
     restartEngine();
+}
+
+function disableNativeAmbientMode() {
+    // Only on YouTube, not YouTube Music
+    if (location.hostname.includes('music.youtube.com')) return;
+
+    // Only detect once per page load to avoid spamming the DOM
+    if (window.rtNativeAmbientDisabled) return;
+
+    const findAndDisable = () => {
+        const regularCanvases = document.querySelectorAll('#cinematics canvas');
+        const shortsCanvases = document.querySelectorAll('#shorts-cinematic-container canvas');
+
+        let found = false;
+
+        regularCanvases.forEach(c => {
+            c.remove();
+            found = true;
+        });
+
+        shortsCanvases.forEach(c => {
+            c.remove();
+            found = true;
+        });
+
+        if (found) {
+            window.rtNativeAmbientDisabled = true;
+
+            // Check storage to ensure the alert is only shown once EVER
+            chrome.storage.local.get(['ambientAlertShown'], (res) => {
+                if (!res.ambientAlertShown) {
+                    alert(chrome.i18n.getMessage("native_ambient_mode_disabled"));
+                    chrome.storage.local.set({ ambientAlertShown: true });
+                }
+            });
+            return true;
+        }
+        return false;
+    };
+
+    if (findAndDisable()) return;
+
+    // If not found yet (because of lazy loading or SPA navigation), wait for it
+    const observer = new MutationObserver((mutations, obs) => {
+        if (findAndDisable()) {
+            obs.disconnect(); // Stop observing once found
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
 }
 
 // ----------------------------------------------------------------------
@@ -802,6 +853,8 @@ const EffectManager = (() => {
         if (!loopId) return;
         loopId = requestAnimationFrame(loop);
 
+        if (document.hidden) return;
+
         if (timestamp - lastTime < 50) return; // 20fps for color cycle is enough
         lastTime = timestamp;
 
@@ -1079,6 +1132,7 @@ const WebGLEngine = (() => {
         animationId = requestAnimationFrame(loop);
 
         if (!config.masterSwitch || !config.webglActive) return;
+        if (document.hidden) return;
 
         const video = VideoManager.findActive();
         if (!video || video.paused || video.readyState < 2) return;
@@ -1488,6 +1542,7 @@ const ModernEngine = (() => {
         }
 
         if (!config.masterSwitch) return;
+        if (document.hidden) return;
         if (timestamp - lastTime < config.framerate) return;
         lastTime = timestamp;
 
@@ -1826,6 +1881,8 @@ const AmbientEngine = (() => {
         if (!loopId) return;
         loopId = requestAnimationFrame(loop);
 
+        if (document.hidden) return;
+
         if (!config.masterSwitch || !config.ambientMode) {
             if (canvas) canvas.style.display = 'none';
             return;
@@ -1980,5 +2037,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         } catch (e) {
             sendResponse({ fps: 0 });
         }
+    }
+
+    if (request.type === 'GET_VIDEO_THUMBNAIL') {
+        const videoId = request.videoId || ThumbnailManager.getVideoId();
+        const thumbnailImg = ThumbnailManager.getThumbnail(videoId);
+        const thumbnailUrl = thumbnailImg ? thumbnailImg.src : (videoId ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` : null);
+        sendResponse({ thumbnail: thumbnailUrl });
     }
 });
